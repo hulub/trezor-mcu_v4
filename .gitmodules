@@ -13,3 +13,6 @@
 [submodule "vendor"]
 	path = vendor
 	url = https://github.com/libopencm3/libopencm3
+[submodule "vendor/libopencm3"]
+	path = vendor/libopencm3
+	url = https://github.com/libopencm3/libopencm3.git
