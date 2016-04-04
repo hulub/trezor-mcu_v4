@@ -1,12 +1,12 @@
 [submodule "trezor-crypto"]
-	path = vendor/trezor-crypto
+	path = trezor-crypto
 	url = https://github.com/trezor/trezor-crypto.git
 [submodule "trezor-common"]
-	path = vendor/trezor-common
+	path = trezor-common
 	url = https://github.com/trezor/trezor-common.git
 [submodule "trezor-qrenc"]
-	path = vendor/trezor-qrenc
+	path = trezor-qrenc
 	url = https://github.com/trezor/trezor-qrenc.git
 [submodule "libopencm3"]
-	path = vendor/libopencm3
+	path = libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
