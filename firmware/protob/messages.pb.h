@@ -65,7 +65,8 @@ typedef enum _MessageType {
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
     MessageType_MessageType_DebugLinkStop = 103,
-    MessageType_MessageType_DebugLinkLog = 104
+    MessageType_MessageType_DebugLinkLog = 104,
+	MessageType_MessageType_RingSignMessage = 105
 } MessageType;
 
 /* Struct definitions */
