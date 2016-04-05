@@ -664,6 +664,55 @@ void fsm_msgSignMessage(SignMessage *msg)
 	layoutHome();
 }
 
+/* Ring Sign Message implementation
+ * ... for now it just sends back a MessageSignature that does not have an address
+ * ... the returned message has just the encrpted message
+ *  */
+void fsm_msgRingSignMessage(RingSignMessage *msg)
+{
+	RESP_INIT(MessageSignature);
+
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
+	layoutSignMessage(msg->message.bytes, msg->message.size);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign message cancelled");
+		layoutHome();
+		return;
+	}
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+
+	/* no coin needed
+	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	if (!coin) return; */
+
+	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	layoutProgressSwipe("Signing", 0);
+	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->signature.bytes) == 0) {
+//		resp->has_address = true;
+		resp->has_address = false;
+		/* no need for all of this
+		uint8_t addr_raw[21];
+		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
+		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address)); */
+		resp->has_signature = true;
+		resp->signature.size = 65;
+		msg_write(MessageType_MessageType_MessageSignature, resp);
+	} else {
+		fsm_sendFailure(FailureType_Failure_Other, "Error signing message");
+	}
+	layoutHome();
+}
+
 void fsm_msgVerifyMessage(VerifyMessage *msg)
 {
 	if (!msg->has_address) {
