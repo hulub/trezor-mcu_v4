@@ -689,21 +689,22 @@ void fsm_msgRingSignMessage(RingSignMessage *msg)
 		return;
 	}
 
-	/* no coin needed
+	/* no coin needed */
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
-	if (!coin) return; */
+	if (!coin) return;
 
 	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	layoutProgressSwipe("Signing", 0);
 	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->signature.bytes) == 0) {
-//		resp->has_address = true;
-		resp->has_address = false;
-		/* no need for all of this
+		resp->has_address = true;
+//		resp->has_address = false;
+		/* no need for all of this */
 		uint8_t addr_raw[21];
 		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
-		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address)); */
+		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
+
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_MessageSignature, resp);

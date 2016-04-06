@@ -61,13 +61,15 @@ typedef enum _MessageType {
     MessageType_MessageType_SignIdentity = 53,
     MessageType_MessageType_SignedIdentity = 54,
     MessageType_MessageType_GetFeatures = 55,
+    // Ring Signature Messages
+    MessageType_MessageType_RingSignMessage = 60,
+    MessageType_MessageType_MessageRingSignature = 61,
+    // Debug Messages
     MessageType_MessageType_DebugLinkDecision = 100,
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
     MessageType_MessageType_DebugLinkStop = 103,
-    MessageType_MessageType_DebugLinkLog = 104,
-    MessageType_MessageType_RingSignMessage = 105,
-	MessageType_MessageType_MessageRingSignature = 106
+    MessageType_MessageType_DebugLinkLog = 104
 } MessageType;
 
 /* Struct definitions */
@@ -634,17 +636,9 @@ typedef struct _WordAck {
     char word[12];
 } WordAck;
 
-/* Ring Signature struct definitions */
-typedef struct {
-    size_t size;
-    uint8_t bytes[33];
-} Public_key_t;
-
-typedef struct {
-    size_t n;
-    Public_key_t list[16];
-} PublicKey_list_t;
-
+/* Ring Signature struct definitions
+ * ... for now it looks just as SignMessage and MessageSignature
+ *  */
 typedef struct _RingSignMessage {
 	/* I don't know what the next two fields are for
 	 * ... the address is for accessing the private key node
@@ -653,41 +647,23 @@ typedef struct _RingSignMessage {
     size_t address_n_count;
     uint32_t address_n[8];
 
-    PublicKey_list_t L;
-    uint8_t pi;
     SignMessage_message_t message;
-    /* no coin
+
+    /* We don't need these coin things */
     bool has_coin_name;
-    char coin_name[17]; */
+    char coin_name[17];
 } RingSignMessage;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[65];
-} CipherText_t;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[33];
-} Randomness_value_t;
-
-typedef struct {
-    size_t n;
-    Randomness_value_t list[16];
-} Randomness_list_t;
-
-typedef struct {
-    CipherText_t c;
-    Randomness_list_t s;
-    Public_key_t yt;
-} MessageRingSignature_signature_t;
 
 typedef struct _MessageRingSignature {
 	/* I don't know what to do with this address */
     bool has_address;
     char address[36];
+
+    /* The signature should look different
+     * ... but for now, this is fine
+     *  */
     bool has_signature;
-    MessageRingSignature_signature_t signature;
+    MessageSignature_signature_t signature;
 } MessageRingSignature;
 
 /* Default values for struct fields */
