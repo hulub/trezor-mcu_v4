@@ -673,6 +673,7 @@ extern const uint32_t ResetDevice_strength_default;
 extern const char ResetDevice_language_default[17];
 extern const char RecoveryDevice_language_default[17];
 extern const char SignMessage_coin_name_default[17];
+extern const char RingSignMessage_coin_name_default[17];
 extern const char EncryptMessage_coin_name_default[17];
 extern const char EstimateTxSize_coin_name_default[17];
 extern const char SignTx_coin_name_default[17];
@@ -712,6 +713,11 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SignMessage_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "Bitcoin"}
 #define VerifyMessage_init_default               {false, "", false, {0, {0}}, false, {0, {0}}}
 #define MessageSignature_init_default            {false, "", false, {0, {0}}}
+
+/* Ring Sign Message */
+#define RingSignMessage_init_default             {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "Bitcoin"}
+#define MessageRingSignature_init_default        {false, "", false, {0, {0}}}
+
 #define EncryptMessage_init_default              {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin"}
 #define EncryptedMessage_init_default            {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define DecryptMessage_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
@@ -766,6 +772,11 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SignMessage_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, ""}
 #define VerifyMessage_init_zero                  {false, "", false, {0, {0}}, false, {0, {0}}}
 #define MessageSignature_init_zero               {false, "", false, {0, {0}}}
+
+/* Ring Sign Messages */
+#define RingSignMessage_init_zero                {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, ""}
+#define MessageRingSignature_init_zero           {false, "", false, {0, {0}}}
+
 #define EncryptMessage_init_zero                 {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
 #define EncryptedMessage_init_zero               {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define DecryptMessage_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
@@ -875,6 +886,11 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define LoadDevice_skip_checksum_tag             7
 #define MessageSignature_address_tag             1
 #define MessageSignature_signature_tag           2
+
+/* Ring Sign Messages */
+#define MessageRingSignature_address_tag         1
+#define MessageRingSignature_signature_tag       2
+
 #define PassphraseAck_passphrase_tag             1
 #define PinMatrixAck_pin_tag                     1
 #define PinMatrixRequest_type_tag                1
@@ -903,6 +919,12 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SignMessage_address_n_tag                1
 #define SignMessage_message_tag                  2
 #define SignMessage_coin_name_tag                3
+
+/* Ring Sign Messages */
+#define RingSignMessage_address_n_tag            1
+#define RingSignMessage_message_tag              2
+#define RingSignMessage_coin_name_tag            3
+
 #define SignTx_outputs_count_tag                 1
 #define SignTx_inputs_count_tag                  2
 #define SignTx_coin_name_tag                     3
@@ -958,6 +980,11 @@ extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
 extern const pb_field_t VerifyMessage_fields[4];
 extern const pb_field_t MessageSignature_fields[3];
+
+/* Ring Sign Message */
+extern const pb_field_t RingSignMessage_fields[4];
+extern const pb_field_t MessageRingSignature_fields[3];
+
 extern const pb_field_t EncryptMessage_fields[6];
 extern const pb_field_t EncryptedMessage_fields[4];
 extern const pb_field_t DecryptMessage_fields[5];
@@ -1014,6 +1041,11 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SignMessage_size                         1094
 #define VerifyMessage_size                       1132
 #define MessageSignature_size                    105
+
+/* Ring Sign Message */
+#define RingSignMessage_size                     1094
+#define MessageRingSignature_size                105
+
 #define EncryptMessage_size                      1131
 #define EncryptedMessage_size                    1168
 #define DecryptMessage_size                      1216

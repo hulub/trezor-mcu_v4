@@ -9,6 +9,10 @@ const uint32_t ResetDevice_strength_default = 256u;
 const char ResetDevice_language_default[17] = "english";
 const char RecoveryDevice_language_default[17] = "english";
 const char SignMessage_coin_name_default[17] = "Bitcoin";
+
+/* Ring Sign Message */
+const char RingSignMessage_coin_name_default[17] = "Bitcoin";
+
 const char EncryptMessage_coin_name_default[17] = "Bitcoin";
 const char EstimateTxSize_coin_name_default[17] = "Bitcoin";
 const char SignTx_coin_name_default[17] = "Bitcoin";
@@ -222,6 +226,20 @@ const pb_field_t MessageSignature_fields[3] = {
     PB_LAST_FIELD
 };
 
+/* Ring Sign Message */
+const pb_field_t RingSignMessage_fields[4] = {
+    PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, RingSignMessage, address_n, address_n, 0),
+    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, RingSignMessage, message, address_n, 0),
+    PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, RingSignMessage, coin_name, message, &RingSignMessage_coin_name_default),
+    PB_LAST_FIELD
+};
+
+const pb_field_t MessageRingSignature_fields[3] = {
+    PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, MessageRingSignature, address, address, 0),
+    PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, MessageRingSignature, signature, address, 0),
+    PB_LAST_FIELD
+};
+
 const pb_field_t EncryptMessage_fields[6] = {
     PB_FIELD2(  1, BYTES   , OPTIONAL, STATIC  , FIRST, EncryptMessage, pubkey, pubkey, 0),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, EncryptMessage, message, pubkey, 0),
@@ -375,7 +393,7 @@ const pb_field_t DebugLinkLog_fields[4] = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_Address_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_EncryptMessage_EncryptedMessage_DecryptMessage_DecryptedMessage_CipherKeyValue_CipheredKeyValue_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_SignIdentity_SignedIdentity_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog)
+STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_Address_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_RingSignMessage_MessageRingSignature_EncryptMessage_EncryptedMessage_DecryptMessage_DecryptedMessage_CipherKeyValue_CipheredKeyValue_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_SignIdentity_SignedIdentity_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)

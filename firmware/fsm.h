@@ -50,6 +50,10 @@ void fsm_msgGetAddress(GetAddress *msg);
 void fsm_msgEntropyAck(EntropyAck *msg);
 void fsm_msgSignMessage(SignMessage *msg);
 void fsm_msgVerifyMessage(VerifyMessage *msg);
+
+/* Ring Sign Message */
+void fsm_msgRingSignMessage(RingSignMessage *msg);
+
 void fsm_msgSignIdentity(SignIdentity *msg);
 void fsm_msgEncryptMessage(EncryptMessage *msg);
 void fsm_msgDecryptMessage(DecryptMessage *msg);
