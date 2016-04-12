@@ -670,7 +670,7 @@ void fsm_msgSignMessage(SignMessage *msg)
  *  */
 void fsm_msgRingSignMessage(RingSignMessage *msg)
 {
-	RESP_INIT(MessageSignature);
+	RESP_INIT(MessageRingSignature);
 
 	if (!storage_isInitialized()) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
@@ -707,7 +707,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg)
 
 		resp->has_signature = true;
 		resp->signature.size = 65;
-		msg_write(MessageType_MessageType_MessageSignature, resp);
+		msg_write(MessageType_MessageType_MessageRingSignature, resp);
 	} else {
 		fsm_sendFailure(FailureType_Failure_Other, "Error signing message");
 	}
