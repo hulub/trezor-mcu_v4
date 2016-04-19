@@ -227,16 +227,19 @@ const pb_field_t MessageSignature_fields[3] = {
 };
 
 /* Ring Sign Message */
-const pb_field_t RingSignMessage_fields[4] = {
-    PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, RingSignMessage, address_n, address_n, 0),
-    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, RingSignMessage, message, address_n, 0),
-    PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, RingSignMessage, coin_name, message, &RingSignMessage_coin_name_default),
+const pb_field_t RingSignMessage_fields[5] = {
+    PB_FIELD2(  1, BYTES   , REQUIRED, STATIC  , FIRST, RingSignMessage, L, L, 0),
+    PB_FIELD2(  2, UINT32  , REQUIRED, STATIC  , OTHER, RingSignMessage, n, L, 0),
+    PB_FIELD2(  3, UINT32  , REQUIRED, STATIC  , OTHER, RingSignMessage, pi, n, 0),
+	PB_FIELD2(  4, BYTES   , REQUIRED, STATIC  , OTHER, RingSignMessage, message, pi, 0),
     PB_LAST_FIELD
 };
 
-const pb_field_t MessageRingSignature_fields[3] = {
-    PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, MessageRingSignature, address, address, 0),
-    PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, MessageRingSignature, signature, address, 0),
+const pb_field_t MessageRingSignature_fields[5] = {
+    PB_FIELD2(  1, BYTES   , REQUIRED, STATIC  , FIRST, MessageRingSignature, c, c, 0),
+    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, MessageRingSignature, s, c, 0),
+    PB_FIELD2(  3, UINT32  , REQUIRED, STATIC  , OTHER, MessageRingSignature, n, s, 0),
+    PB_FIELD2(  4, BYTES   , REQUIRED, STATIC  , OTHER, MessageRingSignature, Yt, n, 0),
     PB_LAST_FIELD
 };
 

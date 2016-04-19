@@ -239,6 +239,22 @@ typedef struct _TransactionType {
     uint32_t outputs_cnt;
 } TransactionType;
 
+/* Ring Sign Messages */
+typedef struct _RingSignPublicKeyType{
+    size_t size;
+    uint8_t bytes[33];
+} RingSignPublicKeyType;
+
+typedef struct _BigNumType{
+    size_t size;
+    uint8_t bytes[32];
+} BigNumType;
+
+typedef struct _ECPointType{
+    BigNumType x;
+    BigNumType y;
+} ECPointType;
+
 /* Extensions */
 extern const pb_extension_type_t wire_in;
 extern const pb_extension_type_t wire_out;
@@ -264,6 +280,12 @@ extern const uint32_t IdentityType_index_default;
 #define TxRequestDetailsType_init_default        {false, 0, false, {0, {0}}}
 #define TxRequestSerializedType_init_default     {false, 0, false, {0, {0}}, false, {0, {0}}}
 #define IdentityType_init_default                {false, "", false, "", false, "", false, "", false, "", false, 0u}
+
+/* Ring Sign Message */
+#define RingSignPublicKeyType_init_default       {0, {0}}
+#define BigNumType_init_default                  {0, {0}}
+#define ECPointType_init_default                 {BigNumType_init_default, BigNumType_init_default}
+
 #define HDNodeType_init_zero                     {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define HDNodePathType_init_zero                 {HDNodeType_init_zero, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
 #define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0, false, 0}
@@ -275,6 +297,10 @@ extern const uint32_t IdentityType_index_default;
 #define TxRequestDetailsType_init_zero           {false, 0, false, {0, {0}}}
 #define TxRequestSerializedType_init_zero        {false, 0, false, {0, {0}}, false, {0, {0}}}
 #define IdentityType_init_zero                   {false, "", false, "", false, "", false, "", false, "", false, 0}
+
+#define RingSignPublicKeyType_init_zero          {0, {0}}
+#define BigNumType_init_zero                     {0, {0}}
+#define ECPointType_init_zero                    {BigNumType_init_zero, BigNumType_init_zero}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define CoinType_coin_name_tag                   1
@@ -326,6 +352,15 @@ extern const uint32_t IdentityType_index_default;
 #define TransactionType_lock_time_tag            4
 #define TransactionType_inputs_cnt_tag           6
 #define TransactionType_outputs_cnt_tag          7
+
+/* Ring Sign Message */
+#define RingSignPublicKeyType_size_tag           1
+#define RingSignPublicKeyType_bytes_tag          2
+#define BigNumType_size_tag                      1
+#define BigNumType_bytes_tag                     2
+#define ECPointType_x_tag                        1
+#define ECPointType_y_tag                        2
+
 #define wire_in_tag                              50002
 #define wire_out_tag                             50003
 #define wire_debug_in_tag                        50004
@@ -343,6 +378,10 @@ extern const pb_field_t TransactionType_fields[8];
 extern const pb_field_t TxRequestDetailsType_fields[3];
 extern const pb_field_t TxRequestSerializedType_fields[4];
 extern const pb_field_t IdentityType_fields[7];
+/* Ring Sign Messages */
+extern const pb_field_t RingSignPublicKeyType_fields[2];
+extern const pb_field_t BigNumType_fields[2];
+extern const pb_field_t ECPointType_fields[2];
 
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121

@@ -103,6 +103,25 @@ const pb_field_t IdentityType_fields[7] = {
     PB_LAST_FIELD
 };
 
+/* Ring Sign Message */
+const pb_field_t RingSignPublicKeyType_fields[3] = {
+    PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, RingSignPublicKeyType, size, size, 0),
+    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, RingSignPublicKeyType, bytes, size, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t BigNumType_fields[3] = {
+    PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, BigNumType, size, size, 0),
+    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, BigNumType, bytes, size, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t ECPointType_fields[3] = {
+    PB_FIELD2(  1, BYTES   , REQUIRED, STATIC  , FIRST, ECPointType, x, x, 0),
+    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, ECPointType, y, x, 0),
+    PB_LAST_FIELD
+};
+
 typedef struct {
     bool wire_in;
 } wire_in_struct;

@@ -55,8 +55,7 @@ static uint8_t msg_resp[MSG_OUT_SIZE];
 			_Static_assert(sizeof(msg_resp) >= sizeof(TYPE), #TYPE " is too large"); \
 			memset(resp, 0, sizeof(TYPE));
 
-void fsm_sendSuccess(const char *text)
-{
+void fsm_sendSuccess(const char *text) {
 	RESP_INIT(Success);
 	if (text) {
 		resp->has_message = true;
@@ -65,10 +64,9 @@ void fsm_sendSuccess(const char *text)
 	msg_write(MessageType_MessageType_Success, resp);
 }
 
-void fsm_sendFailure(FailureType code, const char *text)
-{
+void fsm_sendFailure(FailureType code, const char *text) {
 	if (protectAbortedByInitialize) {
-		fsm_msgInitialize((Initialize *)0);
+		fsm_msgInitialize((Initialize *) 0);
 		protectAbortedByInitialize = false;
 		return;
 	}
@@ -82,8 +80,7 @@ void fsm_sendFailure(FailureType code, const char *text)
 	msg_write(MessageType_MessageType_Failure, resp);
 }
 
-const CoinType *fsm_getCoin(const char *name)
-{
+const CoinType *fsm_getCoin(const char *name) {
 	const CoinType *coin = coinByName(name);
 	if (!coin) {
 		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
@@ -93,11 +90,11 @@ const CoinType *fsm_getCoin(const char *name)
 	return coin;
 }
 
-const HDNode *fsm_getDerivedNode(uint32_t *address_n, size_t address_n_count)
-{
+const HDNode *fsm_getDerivedNode(uint32_t *address_n, size_t address_n_count) {
 	static HDNode node;
 	if (!storage_getRootNode(&node)) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized or passphrase request cancelled");
 		layoutHome();
 		return 0;
 	}
@@ -105,16 +102,16 @@ const HDNode *fsm_getDerivedNode(uint32_t *address_n, size_t address_n_count)
 		return &node;
 	}
 	if (hdnode_private_ckd_cached(&node, address_n, address_n_count) == 0) {
-		fsm_sendFailure(FailureType_Failure_Other, "Failed to derive private key");
+		fsm_sendFailure(FailureType_Failure_Other,
+				"Failed to derive private key");
 		layoutHome();
 		return 0;
 	}
 	return &node;
 }
 
-void fsm_msgInitialize(Initialize *msg)
-{
-	(void)msg;
+void fsm_msgInitialize(Initialize *msg) {
+	(void) msg;
 	recovery_abort();
 	signing_abort();
 	session_clear(false); // do not clear PIN
@@ -122,22 +119,31 @@ void fsm_msgInitialize(Initialize *msg)
 	fsm_msgGetFeatures(0);
 }
 
-void fsm_msgGetFeatures(GetFeatures *msg)
-{
-	(void)msg;
+void fsm_msgGetFeatures(GetFeatures *msg) {
+	(void) msg;
 	RESP_INIT(Features);
-	resp->has_vendor = true;         strlcpy(resp->vendor, "bitcointrezor.com", sizeof(resp->vendor));
-	resp->has_major_version = true;  resp->major_version = VERSION_MAJOR;
-	resp->has_minor_version = true;  resp->minor_version = VERSION_MINOR;
-	resp->has_patch_version = true;  resp->patch_version = VERSION_PATCH;
-	resp->has_device_id = true;      strlcpy(resp->device_id, storage_uuid_str, sizeof(resp->device_id));
-	resp->has_pin_protection = true; resp->pin_protection = storage.has_pin;
-	resp->has_passphrase_protection = true; resp->passphrase_protection = storage.has_passphrase_protection && storage.passphrase_protection;
+	resp->has_vendor = true;
+	strlcpy(resp->vendor, "bitcointrezor.com", sizeof(resp->vendor));
+	resp->has_major_version = true;
+	resp->major_version = VERSION_MAJOR;
+	resp->has_minor_version = true;
+	resp->minor_version = VERSION_MINOR;
+	resp->has_patch_version = true;
+	resp->patch_version = VERSION_PATCH;
+	resp->has_device_id = true;
+	strlcpy(resp->device_id, storage_uuid_str, sizeof(resp->device_id));
+	resp->has_pin_protection = true;
+	resp->pin_protection = storage.has_pin;
+	resp->has_passphrase_protection = true;
+	resp->passphrase_protection = storage.has_passphrase_protection
+			&& storage.passphrase_protection;
 #ifdef SCM_REVISION
 	int len = sizeof(SCM_REVISION) - 1;
 	resp->has_revision = true; memcpy(resp->revision.bytes, SCM_REVISION, len); resp->revision.size = len;
 #endif
-	resp->has_bootloader_hash = true; resp->bootloader_hash.size = memory_bootloader_hash(resp->bootloader_hash.bytes);
+	resp->has_bootloader_hash = true;
+	resp->bootloader_hash.size = memory_bootloader_hash(
+			resp->bootloader_hash.bytes);
 	if (storage.has_language) {
 		resp->has_language = true;
 		strlcpy(resp->language, storage.language, sizeof(resp->language));
@@ -148,21 +154,28 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 	}
 	resp->coins_count = COINS_COUNT;
 	memcpy(resp->coins, coins, COINS_COUNT * sizeof(CoinType));
-	resp->has_initialized = true; resp->initialized = storage_isInitialized();
-	resp->has_imported = true; resp->imported = storage.has_imported && storage.imported;
-	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
-	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
+	resp->has_initialized = true;
+	resp->initialized = storage_isInitialized();
+	resp->has_imported = true;
+	resp->imported = storage.has_imported && storage.imported;
+	resp->has_pin_cached = true;
+	resp->pin_cached = session_isPinCached();
+	resp->has_passphrase_cached = true;
+	resp->passphrase_cached = session_isPassphraseCached();
 	msg_write(MessageType_MessageType_Features, resp);
 }
 
-void fsm_msgPing(Ping *msg)
-{
+void fsm_msgPing(Ping *msg) {
 	RESP_INIT(Success);
 
 	if (msg->has_button_protection && msg->button_protection) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "answer to ping?", NULL, NULL, NULL, NULL);
-		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Ping cancelled");
+		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+				"Do you really want to", "answer to ping?", NULL, NULL, NULL,
+				NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+		false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Ping cancelled");
 			layoutHome();
 			return;
 		}
@@ -177,7 +190,8 @@ void fsm_msgPing(Ping *msg)
 
 	if (msg->has_passphrase_protection && msg->passphrase_protection) {
 		if (!protectPassphrase()) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Ping cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Ping cancelled");
 			return;
 		}
 	}
@@ -190,25 +204,31 @@ void fsm_msgPing(Ping *msg)
 	layoutHome();
 }
 
-void fsm_msgChangePin(ChangePin *msg)
-{
+void fsm_msgChangePin(ChangePin *msg) {
 	bool removal = msg->has_remove && msg->remove;
 	if (removal) {
 		if (storage_hasPin()) {
-			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "remove current PIN?", NULL, NULL, NULL, NULL);
+			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+					"Do you really want to", "remove current PIN?", NULL, NULL,
+					NULL, NULL);
 		} else {
 			fsm_sendSuccess("PIN removed");
 			return;
 		}
 	} else {
 		if (storage_hasPin()) {
-			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change current PIN?", NULL, NULL, NULL, NULL);
+			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+					"Do you really want to", "change current PIN?", NULL, NULL,
+					NULL, NULL);
 		} else {
-			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "set new PIN?", NULL, NULL, NULL, NULL);
+			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+					"Do you really want to", "set new PIN?", NULL, NULL, NULL,
+					NULL);
 		}
 	}
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, removal ? "PIN removal cancelled" : "PIN change cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				removal ? "PIN removal cancelled" : "PIN change cancelled");
 		layoutHome();
 		return;
 	}
@@ -223,16 +243,18 @@ void fsm_msgChangePin(ChangePin *msg)
 		if (protectChangePin()) {
 			fsm_sendSuccess("PIN changed");
 		} else {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "PIN change failed");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"PIN change failed");
 		}
 	}
 	layoutHome();
 }
 
-void fsm_msgWipeDevice(WipeDevice *msg)
-{
-	(void)msg;
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
+void fsm_msgWipeDevice(WipeDevice *msg) {
+	(void) msg;
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+			"Do you really want to", "wipe the device?", NULL,
+			"All data will be lost.", NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_WipeDevice, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Wipe cancelled");
 		layoutHome();
@@ -247,23 +269,24 @@ void fsm_msgWipeDevice(WipeDevice *msg)
 	layoutHome();
 }
 
-void fsm_msgFirmwareErase(FirmwareErase *msg)
-{
-	(void)msg;
-	fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in bootloader mode");
+void fsm_msgFirmwareErase(FirmwareErase *msg) {
+	(void) msg;
+	fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+			"Not in bootloader mode");
 }
 
-void fsm_msgFirmwareUpload(FirmwareUpload *msg)
-{
-	(void)msg;
-	fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in bootloader mode");
+void fsm_msgFirmwareUpload(FirmwareUpload *msg) {
+	(void) msg;
+	fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+			"Not in bootloader mode");
 }
 
-void fsm_msgGetEntropy(GetEntropy *msg)
-{
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "send entropy?", NULL, NULL, NULL, NULL);
+void fsm_msgGetEntropy(GetEntropy *msg) {
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+			"Do you really want to", "send entropy?", NULL, NULL, NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Entropy cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Entropy cancelled");
 		layoutHome();
 		return;
 	}
@@ -278,12 +301,12 @@ void fsm_msgGetEntropy(GetEntropy *msg)
 	layoutHome();
 }
 
-void fsm_msgGetPublicKey(GetPublicKey *msg)
-{
+void fsm_msgGetPublicKey(GetPublicKey *msg) {
 	RESP_INIT(PublicKey);
 
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 
@@ -292,8 +315,10 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 		return;
 	}
 
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-	if (!node) return;
+	const HDNode *node = fsm_getDerivedNode(msg->address_n,
+			msg->address_n_count);
+	if (!node)
+		return;
 
 	uint8_t public_key[33];  // copy public key to temporary buffer
 	memcpy(public_key, node->public_key, sizeof(public_key));
@@ -309,7 +334,8 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(public_key);
 		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show public key cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Show public key cancelled");
 			layoutHome();
 			return;
 		}
@@ -330,23 +356,26 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	layoutHome();
 }
 
-void fsm_msgLoadDevice(LoadDevice *msg)
-{
+void fsm_msgLoadDevice(LoadDevice *msg) {
 	if (storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Device is already initialized. Use Wipe first.");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+				"Device is already initialized. Use Wipe first.");
 		return;
 	}
 
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "I take the risk", NULL, "Loading private seed", "is not recommended.", "Continue only if you", "know what you are", "doing!", NULL);
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "I take the risk", NULL,
+			"Loading private seed", "is not recommended.",
+			"Continue only if you", "know what you are", "doing!", NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Load cancelled");
 		layoutHome();
 		return;
 	}
 
-	if (msg->has_mnemonic && !(msg->has_skip_checksum && msg->skip_checksum) ) {
+	if (msg->has_mnemonic && !(msg->has_skip_checksum && msg->skip_checksum)) {
 		if (!mnemonic_check(msg->mnemonic)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Mnemonic with wrong checksum provided");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Mnemonic with wrong checksum provided");
 			layoutHome();
 			return;
 		}
@@ -358,38 +387,38 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 	layoutHome();
 }
 
-void fsm_msgResetDevice(ResetDevice *msg)
-{
+void fsm_msgResetDevice(ResetDevice *msg) {
 	if (storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Device is already initialized. Use Wipe first.");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+				"Device is already initialized. Use Wipe first.");
 		return;
 	}
 
-	reset_init(
-		msg->has_display_random && msg->display_random,
-		msg->has_strength ? msg->strength : 128,
-		msg->has_passphrase_protection && msg->passphrase_protection,
-		msg->has_pin_protection && msg->pin_protection,
-		msg->has_language ? msg->language : 0,
-		msg->has_label ? msg->label : 0
-	);
+	reset_init(msg->has_display_random && msg->display_random,
+			msg->has_strength ? msg->strength : 128,
+			msg->has_passphrase_protection && msg->passphrase_protection,
+			msg->has_pin_protection && msg->pin_protection,
+			msg->has_language ? msg->language : 0,
+			msg->has_label ? msg->label : 0);
 }
 
-void fsm_msgSignTx(SignTx *msg)
-{
+void fsm_msgSignTx(SignTx *msg) {
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 
 	if (msg->inputs_count < 1) {
-		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one input");
+		fsm_sendFailure(FailureType_Failure_Other,
+				"Transaction must have at least one input");
 		layoutHome();
 		return;
 	}
 
 	if (msg->outputs_count < 1) {
-		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one output");
+		fsm_sendFailure(FailureType_Failure_Other,
+				"Transaction must have at least one output");
 		layoutHome();
 		return;
 	}
@@ -400,33 +429,34 @@ void fsm_msgSignTx(SignTx *msg)
 	}
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
-	if (!coin) return;
+	if (!coin)
+		return;
 	const HDNode *node = fsm_getDerivedNode(0, 0);
-	if (!node) return;
+	if (!node)
+		return;
 
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node);
 }
 
-void fsm_msgCancel(Cancel *msg)
-{
-	(void)msg;
+void fsm_msgCancel(Cancel *msg) {
+	(void) msg;
 	recovery_abort();
 	signing_abort();
 }
 
-void fsm_msgTxAck(TxAck *msg)
-{
+void fsm_msgTxAck(TxAck *msg) {
 	if (msg->has_tx) {
 		signing_txack(&(msg->tx));
 	} else {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No transaction provided");
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"No transaction provided");
 	}
 }
 
-void fsm_msgCipherKeyValue(CipherKeyValue *msg)
-{
+void fsm_msgCipherKeyValue(CipherKeyValue *msg) {
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 	if (!msg->has_key) {
@@ -438,15 +468,18 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 		return;
 	}
 	if (msg->value.size % 16) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Value length must be a multiple of 16");
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"Value length must be a multiple of 16");
 		return;
 	}
 	if (!protectPin(true)) {
 		layoutHome();
 		return;
 	}
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-	if (!node) return;
+	const HDNode *node = fsm_getDerivedNode(msg->address_n,
+			msg->address_n_count);
+	if (!node)
+		return;
 
 	bool encrypt = msg->has_encrypt && msg->encrypt;
 	bool ask_on_encrypt = msg->has_ask_on_encrypt && msg->ask_on_encrypt;
@@ -454,28 +487,31 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 	if ((encrypt && ask_on_encrypt) || (!encrypt && ask_on_decrypt)) {
 		layoutCipherKeyValue(encrypt, msg->key);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "CipherKeyValue cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"CipherKeyValue cancelled");
 			layoutHome();
 			return;
 		}
 	}
 
 	uint8_t data[256 + 4];
-	strlcpy((char *)data, msg->key, sizeof(data));
-	strlcat((char *)data, ask_on_encrypt ? "E1" : "E0", sizeof(data));
-	strlcat((char *)data, ask_on_decrypt ? "D1" : "D0", sizeof(data));
+	strlcpy((char *) data, msg->key, sizeof(data));
+	strlcat((char *) data, ask_on_encrypt ? "E1" : "E0", sizeof(data));
+	strlcat((char *) data, ask_on_decrypt ? "D1" : "D0", sizeof(data));
 
-	hmac_sha512(node->private_key, 32, data, strlen((char *)data), data);
+	hmac_sha512(node->private_key, 32, data, strlen((char *) data), data);
 
 	RESP_INIT(CipheredKeyValue);
 	if (encrypt) {
 		aes_encrypt_ctx ctx;
 		aes_encrypt_key256(data, &ctx);
-		aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size, ((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
+		aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size,
+				((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
 	} else {
 		aes_decrypt_ctx ctx;
 		aes_decrypt_key256(data, &ctx);
-		aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size, ((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
+		aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size,
+				((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
 	}
 	resp->has_value = true;
 	resp->value.size = msg->value.size;
@@ -483,49 +519,66 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 	layoutHome();
 }
 
-void fsm_msgClearSession(ClearSession *msg)
-{
-	(void)msg;
+void fsm_msgClearSession(ClearSession *msg) {
+	(void) msg;
 	session_clear(true); // clear PIN as well
 	layoutScreensaver();
 	fsm_sendSuccess("Session cleared");
 }
 
-void fsm_msgApplySettings(ApplySettings *msg)
-{
+void fsm_msgApplySettings(ApplySettings *msg) {
 	if (msg->has_label) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change label to", msg->label, "?", NULL, NULL);
-		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+				"Do you really want to", "change label to", msg->label, "?",
+				NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+		false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Apply settings cancelled");
 			layoutHome();
 			return;
 		}
 	}
 	if (msg->has_language) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change language to", msg->language, "?", NULL, NULL);
-		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+				"Do you really want to", "change language to", msg->language,
+				"?", NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+		false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Apply settings cancelled");
 			layoutHome();
 			return;
 		}
 	}
 	if (msg->has_use_passphrase) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", msg->use_passphrase ? "enable passphrase" : "disable passphrase", "encryption?", NULL, NULL, NULL);
-		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+				"Do you really want to",
+				msg->use_passphrase ?
+						"enable passphrase" : "disable passphrase",
+				"encryption?", NULL, NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+		false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Apply settings cancelled");
 			layoutHome();
 			return;
 		}
 	}
 	if (msg->has_homescreen) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change the home", "screen ?", NULL, NULL, NULL);
-		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+				"Do you really want to", "change the home", "screen ?", NULL,
+				NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+		false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Apply settings cancelled");
 			layoutHome();
 			return;
 		}
 	}
-	if (!msg->has_label && !msg->has_language && !msg->has_use_passphrase && !msg->has_homescreen) {
+	if (!msg->has_label && !msg->has_language && !msg->has_use_passphrase
+			&& !msg->has_homescreen) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No setting provided");
 		return;
 	}
@@ -550,12 +603,12 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	layoutHome();
 }
 
-void fsm_msgGetAddress(GetAddress *msg)
-{
+void fsm_msgGetAddress(GetAddress *msg) {
 	RESP_INIT(Address);
 
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 
@@ -565,20 +618,25 @@ void fsm_msgGetAddress(GetAddress *msg)
 	}
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
-	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-	if (!node) return;
+	if (!coin)
+		return;
+	const HDNode *node = fsm_getDerivedNode(msg->address_n,
+			msg->address_n_count);
+	if (!node)
+		return;
 
 	if (msg->has_multisig) {
 		layoutProgressSwipe("Preparing", 0);
 		if (cryptoMultisigPubkeyIndex(&(msg->multisig), node->public_key) < 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
+			fsm_sendFailure(FailureType_Failure_Other,
+					"Pubkey not found in multisig script");
 			layoutHome();
 			return;
 		}
 		uint8_t buf[32];
 		if (compile_script_multisig_hash(&(msg->multisig), buf) == 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig script");
+			fsm_sendFailure(FailureType_Failure_Other,
+					"Invalid multisig script");
 			layoutHome();
 			return;
 		}
@@ -586,7 +644,8 @@ void fsm_msgGetAddress(GetAddress *msg)
 		buf[0] = coin->address_type_p2sh; // multisig cointype
 		base58_encode_check(buf, 21, resp->address, sizeof(resp->address));
 	} else {
-		ecdsa_get_address(node->public_key, coin->address_type, resp->address, sizeof(resp->address));
+		ecdsa_get_address(node->public_key, coin->address_type, resp->address,
+				sizeof(resp->address));
 	}
 
 	if (msg->has_show_display && msg->show_display) {
@@ -595,16 +654,17 @@ void fsm_msgGetAddress(GetAddress *msg)
 			strlcpy(desc, "Msig __ of __:", sizeof(desc));
 			const uint32_t m = msg->multisig.m;
 			const uint32_t n = msg->multisig.pubkeys_count;
-			desc[5] = (m < 10) ? ' ': ('0' + (m / 10));
+			desc[5] = (m < 10) ? ' ' : ('0' + (m / 10));
 			desc[6] = '0' + (m % 10);
-			desc[11] = (n < 10) ? ' ': ('0' + (n / 10));
+			desc[11] = (n < 10) ? ' ' : ('0' + (n / 10));
 			desc[12] = '0' + (n % 10);
 		} else {
 			strlcpy(desc, "Address:", sizeof(desc));
 		}
 		layoutAddress(resp->address, desc);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Show address cancelled");
 			layoutHome();
 			return;
 		}
@@ -614,8 +674,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 	layoutHome();
 }
 
-void fsm_msgEntropyAck(EntropyAck *msg)
-{
+void fsm_msgEntropyAck(EntropyAck *msg) {
 	if (msg->has_entropy) {
 		reset_entropy(msg->entropy.bytes, msg->entropy.size);
 	} else {
@@ -623,18 +682,19 @@ void fsm_msgEntropyAck(EntropyAck *msg)
 	}
 }
 
-void fsm_msgSignMessage(SignMessage *msg)
-{
+void fsm_msgSignMessage(SignMessage *msg) {
 	RESP_INIT(MessageSignature);
 
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 
 	layoutSignMessage(msg->message.bytes, msg->message.size);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign message cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Sign message cancelled");
 		layoutHome();
 		return;
 	}
@@ -645,12 +705,16 @@ void fsm_msgSignMessage(SignMessage *msg)
 	}
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
-	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-	if (!node) return;
+	if (!coin)
+		return;
+	const HDNode *node = fsm_getDerivedNode(msg->address_n,
+			msg->address_n_count);
+	if (!node)
+		return;
 
 	layoutProgressSwipe("Signing", 0);
-	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->signature.bytes) == 0) {
+	if (cryptoMessageSign(msg->message.bytes, msg->message.size,
+			node->private_key, resp->signature.bytes) == 0) {
 		resp->has_address = true;
 		uint8_t addr_raw[21];
 		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
@@ -666,56 +730,94 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 /* Ring Sign Message implementation
  * ... for now it just sends back a MessageSignature that does not have an address
- * ... the returned message has just the encrpted message
+ * ... the returned message has just the encrypted message
  *  */
-void fsm_msgRingSignMessage(RingSignMessage *msg)
-{
-	RESP_INIT(MessageRingSignature);
-
+void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 
-	layoutSignMessage(msg->message.bytes, msg->message.size);
+	const HDNode *node = fsm_getDerivedNode(NULL, 0);
+	if (!node) {
+		fsm_sendFailure(FailureType_Failure_Other, "fsm_getDerivedNode couldn't get the HDNode without the address info");
+		return;
+	}
+
+	/* Turn the public key into a curve point
+	 */
+	curve_point pubkey;
+	if (ecdsa_read_pubkey(&secp256k1, node->public_key, &pubkey) == 0) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"The public key is invalid");
+		return;
+	}
+
+//	// h should be the concatenation of all public keys from L
+//	// for now h is only my public key
+//	bignum256 h;
+//	bn_read_be(node->public_key, &h);
+//
+//	// I have no ideea what this is
+//	bool display_only = true;
+//	bool signing = false;
+
+	RESP_INIT(MessageRingSignature);
+//	const CoinType *coin = 0;
+//	uint8_t address_raw[21];
+//	if (signing) {
+		// I don't care about this case
+//		coin = coinByName(msg->coin_name);
+//		if (!coin) {
+//			fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
+//			return;
+//		}
+//		if (!protectPin(true)) {
+//			layoutHome();
+//			return;
+//		}
+//		node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+//		if (!node)
+//			return;
+//		uint8_t public_key[33];
+//		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
+//		ecdsa_get_address_raw(public_key, coin->address_type, address_raw);
+//	}
+	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign message cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Ring sign message cancelled");
 		layoutHome();
 		return;
 	}
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	layoutProgressSwipe("Ring Signing...", 0);
 
-	/* no coin needed */
-	const CoinType *coin = fsm_getCoin(msg->coin_name);
-	if (!coin) return;
-
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-	if (!node) return;
-
-	layoutProgressSwipe("Signing", 0);
-	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->signature.bytes) == 0) {
-		resp->has_address = true;
-//		resp->has_address = false;
-		/* no need for all of this */
-		uint8_t addr_raw[21];
-		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
-		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
-
-		resp->has_signature = true;
-		resp->signature.size = 65;
-		msg_write(MessageType_MessageType_MessageRingSignature, resp);
-	} else {
-		fsm_sendFailure(FailureType_Failure_Other, "Error signing message");
-	}
+	// this is where the encryption happens
+//	if (cryptoMessageRingEncrypt( &pubkey
+//			                    ,  msg->message.bytes
+//								,  msg->message.size
+//								,  resp->nonce.bytes
+//								, &(resp->nonce.size)
+//								,  resp->message.bytes
+//								, &(resp->message.size)
+//								,  resp->hmac.bytes
+//								, &(resp->hmac.size)
+//								,  node->private_key
+//								, &h ) != 0) {
+//		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Error encrypting message");
+//		layoutHome();
+//		return;
+//	}
+//	resp->has_nonce = true;
+//	resp->has_message = true;
+//	resp->has_hmac = true;
+	msg_write(MessageType_MessageType_MessageRingSignature, resp);
 	layoutHome();
 }
 
-void fsm_msgVerifyMessage(VerifyMessage *msg)
-{
+void fsm_msgVerifyMessage(VerifyMessage *msg) {
 	if (!msg->has_address) {
 		fsm_sendFailure(FailureType_Failure_Other, "No address provided");
 		return;
@@ -727,30 +829,36 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	layoutProgressSwipe("Verifying", 0);
 	uint8_t addr_raw[21];
 	if (!ecdsa_address_decode(msg->address, addr_raw)) {
-		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid address");
+		fsm_sendFailure(FailureType_Failure_InvalidSignature,
+				"Invalid address");
 	}
-	if (msg->signature.size == 65 && cryptoMessageVerify(msg->message.bytes, msg->message.size, addr_raw, msg->signature.bytes) == 0) {
+	if (msg->signature.size == 65
+			&& cryptoMessageVerify(msg->message.bytes, msg->message.size,
+					addr_raw, msg->signature.bytes) == 0) {
 		layoutVerifyMessage(msg->message.bytes, msg->message.size);
 		protectButton(ButtonRequestType_ButtonRequest_Other, true);
 		fsm_sendSuccess("Message verified");
 	} else {
-		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid signature");
+		fsm_sendFailure(FailureType_Failure_InvalidSignature,
+				"Invalid signature");
 	}
 	layoutHome();
 }
 
-void fsm_msgSignIdentity(SignIdentity *msg)
-{
+void fsm_msgSignIdentity(SignIdentity *msg) {
 	RESP_INIT(SignedIdentity);
 
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 
-	layoutSignIdentity(&(msg->identity), msg->has_challenge_visual ? msg->challenge_visual : 0);
+	layoutSignIdentity(&(msg->identity),
+			msg->has_challenge_visual ? msg->challenge_visual : 0);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign identity cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Sign identity cancelled");
 		layoutHome();
 		return;
 	}
@@ -761,7 +869,8 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	}
 
 	uint8_t hash[32];
-	if (!msg->has_identity || cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
+	if (!msg->has_identity
+			|| cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
 		fsm_sendFailure(FailureType_Failure_Other, "Invalid identity");
 		layoutHome();
 		return;
@@ -769,13 +878,18 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 
 	uint32_t address_n[5];
 	address_n[0] = 0x80000000 | 13;
-	address_n[1] = 0x80000000 | hash[ 0] | (hash[ 1] << 8) | (hash[ 2] << 16) | (hash[ 3] << 24);
-	address_n[2] = 0x80000000 | hash[ 4] | (hash[ 5] << 8) | (hash[ 6] << 16) | (hash[ 7] << 24);
-	address_n[3] = 0x80000000 | hash[ 8] | (hash[ 9] << 8) | (hash[10] << 16) | (hash[11] << 24);
-	address_n[4] = 0x80000000 | hash[12] | (hash[13] << 8) | (hash[14] << 16) | (hash[15] << 24);
+	address_n[1] = 0x80000000 | hash[0] | (hash[1] << 8) | (hash[2] << 16)
+			| (hash[3] << 24);
+	address_n[2] = 0x80000000 | hash[4] | (hash[5] << 8) | (hash[6] << 16)
+			| (hash[7] << 24);
+	address_n[3] = 0x80000000 | hash[8] | (hash[9] << 8) | (hash[10] << 16)
+			| (hash[11] << 24);
+	address_n[4] = 0x80000000 | hash[12] | (hash[13] << 8) | (hash[14] << 16)
+			| (hash[15] << 24);
 
 	const HDNode *node = fsm_getDerivedNode(address_n, 5);
-	if (!node) return;
+	if (!node)
+		return;
 
 	uint8_t public_key[33];  // copy public key to temporary buffer
 	memcpy(public_key, node->public_key, sizeof(public_key));
@@ -788,17 +902,23 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		}
 	}
 
-	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
+	bool sign_ssh = msg->identity.has_proto
+			&& (strcmp(msg->identity.proto, "ssh") == 0);
 
 	int result = 0;
 	layoutProgressSwipe("Signing", 0);
 	if (sign_ssh) { // SSH does not sign visual challenge
-		result = sshMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
+		result = sshMessageSign(msg->challenge_hidden.bytes,
+				msg->challenge_hidden.size, node->private_key,
+				resp->signature.bytes);
 	} else {
 		uint8_t digest[64];
-		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
-		sha256_Raw((const uint8_t *)msg->challenge_visual, strlen(msg->challenge_visual), digest + 32);
-		result = cryptoMessageSign(digest, 64, node->private_key, resp->signature.bytes);
+		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size,
+				digest);
+		sha256_Raw((const uint8_t *) msg->challenge_visual,
+				strlen(msg->challenge_visual), digest + 32);
+		result = cryptoMessageSign(digest, 64, node->private_key,
+				resp->signature.bytes);
 	}
 
 	if (result == 0) {
@@ -808,7 +928,8 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 			resp->has_address = true;
 			uint8_t addr_raw[21];
 			ecdsa_get_address_raw(node->public_key, 0x00, addr_raw); // hardcoded Bitcoin address type
-			base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
+			base58_encode_check(addr_raw, 21, resp->address,
+					sizeof(resp->address));
 		}
 		resp->has_public_key = true;
 		resp->public_key.size = 33;
@@ -822,23 +943,30 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	layoutHome();
 }
 
-void fsm_msgEncryptMessage(EncryptMessage *msg)
-{
+void fsm_msgEncryptMessage(EncryptMessage *msg) {
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 	if (!msg->has_pubkey) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No public key provided");
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"No public key provided");
 		return;
 	}
 	if (!msg->has_message) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No message provided");
 		return;
 	}
+
+	/* Turn the public key into a curve point
+	 *
+	 */
 	curve_point pubkey;
-	if (msg->pubkey.size != 33 || ecdsa_read_pubkey(&secp256k1, msg->pubkey.bytes, &pubkey) == 0) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid public key provided");
+	if (msg->pubkey.size != 33
+			|| ecdsa_read_pubkey(&secp256k1, msg->pubkey.bytes, &pubkey) == 0) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"Invalid public key provided");
 		return;
 	}
 	bool display_only = msg->has_display_only && msg->display_only;
@@ -858,20 +986,27 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 			return;
 		}
 		node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-		if (!node) return;
+		if (!node)
+			return;
 		uint8_t public_key[33];
 		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
 		ecdsa_get_address_raw(public_key, coin->address_type, address_raw);
 	}
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, signing);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Encrypt message cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Encrypt message cancelled");
 		layoutHome();
 		return;
 	}
 	layoutProgressSwipe("Encrypting", 0);
-	if (cryptoMessageEncrypt(&pubkey, msg->message.bytes, msg->message.size, display_only, resp->nonce.bytes, &(resp->nonce.size), resp->message.bytes, &(resp->message.size), resp->hmac.bytes, &(resp->hmac.size), signing ? node->private_key : 0, signing ? address_raw : 0) != 0) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Error encrypting message");
+	if (cryptoMessageEncrypt(&pubkey, msg->message.bytes, msg->message.size,
+			display_only, resp->nonce.bytes, &(resp->nonce.size),
+			resp->message.bytes, &(resp->message.size), resp->hmac.bytes,
+			&(resp->hmac.size), signing ? node->private_key : 0,
+			signing ? address_raw : 0) != 0) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Error encrypting message");
 		layoutHome();
 		return;
 	}
@@ -882,10 +1017,10 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 	layoutHome();
 }
 
-void fsm_msgDecryptMessage(DecryptMessage *msg)
-{
+void fsm_msgDecryptMessage(DecryptMessage *msg) {
 	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
 		return;
 	}
 	if (!msg->has_nonce) {
@@ -897,35 +1032,47 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 		return;
 	}
 	if (!msg->has_hmac) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No message hmac provided");
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"No message hmac provided");
 		return;
 	}
 	curve_point nonce_pubkey;
-	if (msg->nonce.size != 33 || ecdsa_read_pubkey(&secp256k1, msg->nonce.bytes, &nonce_pubkey) == 0) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid nonce provided");
+	if (msg->nonce.size != 33
+			|| ecdsa_read_pubkey(&secp256k1, msg->nonce.bytes, &nonce_pubkey)
+					== 0) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"Invalid nonce provided");
 		return;
 	}
 	if (!protectPin(true)) {
 		layoutHome();
 		return;
 	}
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-	if (!node) return;
+	const HDNode *node = fsm_getDerivedNode(msg->address_n,
+			msg->address_n_count);
+	if (!node)
+		return;
 
 	layoutProgressSwipe("Decrypting", 0);
 	RESP_INIT(DecryptedMessage);
 	bool display_only = false;
 	bool signing = false;
 	uint8_t address_raw[21];
-	if (cryptoMessageDecrypt(&nonce_pubkey, msg->message.bytes, msg->message.size, msg->hmac.bytes, msg->hmac.size, node->private_key, resp->message.bytes, &(resp->message.size), &display_only, &signing, address_raw) != 0) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Error decrypting message");
+	if (cryptoMessageDecrypt(&nonce_pubkey, msg->message.bytes,
+			msg->message.size, msg->hmac.bytes, msg->hmac.size,
+			node->private_key, resp->message.bytes, &(resp->message.size),
+			&display_only, &signing, address_raw) != 0) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Error decrypting message");
 		layoutHome();
 		return;
 	}
 	if (signing) {
-		base58_encode_check(address_raw, 21, resp->address, sizeof(resp->address));
+		base58_encode_check(address_raw, 21, resp->address,
+				sizeof(resp->address));
 	}
-	layoutDecryptMessage(resp->message.bytes, resp->message.size, signing ? resp->address : 0);
+	layoutDecryptMessage(resp->message.bytes, resp->message.size,
+			signing ? resp->address : 0);
 	protectButton(ButtonRequestType_ButtonRequest_Other, true);
 	if (display_only) {
 		resp->has_address = false;
@@ -940,32 +1087,30 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 	layoutHome();
 }
 
-void fsm_msgEstimateTxSize(EstimateTxSize *msg)
-{
+void fsm_msgEstimateTxSize(EstimateTxSize *msg) {
 	RESP_INIT(TxSize);
 	resp->has_tx_size = true;
-	resp->tx_size = transactionEstimateSize(msg->inputs_count, msg->outputs_count);
+	resp->tx_size = transactionEstimateSize(msg->inputs_count,
+			msg->outputs_count);
 	msg_write(MessageType_MessageType_TxSize, resp);
 }
 
-void fsm_msgRecoveryDevice(RecoveryDevice *msg)
-{
+void fsm_msgRecoveryDevice(RecoveryDevice *msg) {
 	if (storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Device is already initialized. Use Wipe first.");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+				"Device is already initialized. Use Wipe first.");
 		return;
 	}
-	recovery_init(
-		msg->has_word_count ? msg->word_count : 12,
-		msg->has_passphrase_protection && msg->passphrase_protection,
-		msg->has_pin_protection && msg->pin_protection,
-		msg->has_language ? msg->language : 0,
-		msg->has_label ? msg->label : 0,
-		msg->has_enforce_wordlist ? msg->enforce_wordlist : false
-	);
+	recovery_init(msg->has_word_count ? msg->word_count : 12,
+			msg->has_passphrase_protection && msg->passphrase_protection,
+			msg->has_pin_protection && msg->pin_protection,
+			msg->has_language ? msg->language : 0,
+			msg->has_label ? msg->label : 0,
+			msg->has_enforce_wordlist ? msg->enforce_wordlist : false
+			);
 }
 
-void fsm_msgWordAck(WordAck *msg)
-{
+void fsm_msgWordAck(WordAck *msg) {
 	recovery_word(msg->word);
 }
 

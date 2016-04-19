@@ -110,6 +110,98 @@ int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t 
 	return result;
 }
 
+/* Ring Sign Message
+ * I need my own crypto method ... that receives all these parameters
+ * 		- my message (byte array) (pointer) + message size
+ * 		- my list of public keys (EncryptMessage_publickey_t array) (pointer) + list size
+ * 		- my pi index
+ * 		- the response (pointer)
+ * */
+int cryptoMessageRingSign(const uint8_t *message, size_t message_len, const EncryptMessage_pubkey_t *L, size_t n, uint8_t pi, const MessageRingSignature resp)
+{
+	int result = 0;
+	return result;
+}
+
+int cryptoMessageRingEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size,uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, bignum256 *h)
+{
+//	payload[0] = 0x00;
+//	uint32_t l = ser_length(msg_size, payload + 1);
+//	memcpy(payload + 1 + l, msg, msg_size);
+//	*payload_len = 1 + l + msg_size;
+
+	curve_point H;
+	scalar_multiply(&secp256k1, &h, &H);
+
+	curve_point Yt;
+	curve_point MathG, MathH, Math, Result;
+	bignum256 u;
+	
+	// generate random nonce
+	if (generate_k_random(&secp256k1, &u) != 0) {
+		return 2;
+	}
+
+	// compute MathG = G * u
+	scalar_multiply(&secp256k1, &u, &MathG);
+
+	// compute MathH = H * u
+	point_multiply(&secp256k1, &u, &H, &MathH);
+
+	// compute Yt = H * privkey(bignum)
+	bignum256 privkeyBignum;
+	bn_read_be(privkey, &privkeyBignum);
+	point_multiply(&secp256k1, &privkeyBignum, &H, &Yt);
+
+	// compute Math = MathG + mathH
+	// set Math = MathH
+	point_copy(&MathH, &Math);
+	// Math += MathG
+	point_add(&secp256k1, &MathG, &Math);
+
+	// compute Result = Math * m (my message turned into bignum)
+	bignum256 m;
+	bn_read_be(&msg, &m);
+	point_multiply(&secp256k1, &m, &Math, &Result);
+
+	bn_write_be(&Result.y, payload);
+
+
+
+//
+//	// compute u*G = mathG
+//	scalar_multiply(&secp256k1, &u, &MathG);
+//	nonce[0] = 0x02 | (MathG.y.val[0] & 0x01);
+//	bn_write_be(&MathG.x, nonce + 1);
+//	*nonce_len = 33;
+//
+//	// compute shared secret
+//	point_multiply(&secp256k1, &u, pubkey, &MathG);
+//	uint8_t shared_secret[33];
+//	shared_secret[0] = 0x02 | (MathG.y.val[0] & 0x01);
+//	bn_write_be(&MathG.x, shared_secret + 1);
+//
+//	// generate keying bytes
+//	uint8_t keying_bytes[80];
+//	uint8_t salt[22 + 33 + 4];
+//	memcpy(salt, "Bitcoin Secure Message", 22);
+//	memcpy(salt + 22, nonce, 33);
+//	pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes, 80, NULL);
+//
+//	// encrypt payload
+//	aes_encrypt_ctx ctx;
+//	aes_encrypt_key256(keying_bytes, &ctx);
+//	aes_cfb_encrypt(payload, payload, *payload_len, keying_bytes + 64, &ctx);
+//
+//	// compute hmac
+//	uint8_t out[32];
+//	hmac_sha256(keying_bytes + 32, 32, payload, *payload_len, out);
+//	memcpy(hmac, out, 8);
+//	*hmac_len = 8;
+
+	return 0;
+}
+
 int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
 {
 	bignum256 r, s, e;
@@ -187,32 +279,38 @@ int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_siz
 		memcpy(payload + 1 + l, msg, msg_size);
 		*payload_len = 1 + l + msg_size;
 	}
+
 	// generate random nonce
 	curve_point R;
 	bignum256 k;
 	if (generate_k_random(&secp256k1, &k) != 0) {
 		return 2;
 	}
+
 	// compute k*G
 	scalar_multiply(&secp256k1, &k, &R);
 	nonce[0] = 0x02 | (R.y.val[0] & 0x01);
 	bn_write_be(&R.x, nonce + 1);
 	*nonce_len = 33;
+
 	// compute shared secret
 	point_multiply(&secp256k1, &k, pubkey, &R);
 	uint8_t shared_secret[33];
 	shared_secret[0] = 0x02 | (R.y.val[0] & 0x01);
 	bn_write_be(&R.x, shared_secret + 1);
+
 	// generate keying bytes
 	uint8_t keying_bytes[80];
 	uint8_t salt[22 + 33 + 4];
 	memcpy(salt, "Bitcoin Secure Message", 22);
 	memcpy(salt + 22, nonce, 33);
 	pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes, 80, NULL);
+
 	// encrypt payload
 	aes_encrypt_ctx ctx;
 	aes_encrypt_key256(keying_bytes, &ctx);
 	aes_cfb_encrypt(payload, payload, *payload_len, keying_bytes + 64, &ctx);
+
 	// compute hmac
 	uint8_t out[32];
 	hmac_sha256(keying_bytes + 32, 32, payload, *payload_len, out);

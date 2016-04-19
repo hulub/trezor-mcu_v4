@@ -640,30 +640,17 @@ typedef struct _WordAck {
  * ... for now it looks just as SignMessage and MessageSignature
  *  */
 typedef struct _RingSignMessage {
-	/* I don't know what the next two fields are for
-	 * ... the address is for accessing the private key node
-	 * ... I don't know where to get this address from, though
-	 * */
-    size_t address_n_count;
-    uint32_t address_n[8];
-
-    SignMessage_message_t message;
-
-    /* We don't need these coin things */
-    bool has_coin_name;
-    char coin_name[17];
+	RingSignPublicKeyType L[8];
+	size_t n;
+	uint32_t pi;
+	SignMessage_message_t message;
 } RingSignMessage;
 
 typedef struct _MessageRingSignature {
-	/* I don't know what to do with this address */
-    bool has_address;
-    char address[36];
-
-    /* The signature should look different
-     * ... but for now, this is fine
-     *  */
-    bool has_signature;
-    MessageSignature_signature_t signature;
+	BigNumType c;
+	BigNumType s[8];
+	size_t n;
+	ECPointType Yt;
 } MessageRingSignature;
 
 /* Default values for struct fields */
@@ -715,8 +702,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define MessageSignature_init_default            {false, "", false, {0, {0}}}
 
 /* Ring Sign Message */
-#define RingSignMessage_init_default             {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "Bitcoin"}
-#define MessageRingSignature_init_default        {false, "", false, {0, {0}}}
+#define RingSignMessage_init_default             {{8, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}/*L*/, 0, 0, {0, {0}}}
+#define MessageRingSignature_init_default        {{0, {0}}, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}}}
 
 #define EncryptMessage_init_default              {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin"}
 #define EncryptedMessage_init_default            {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
@@ -774,8 +761,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define MessageSignature_init_zero               {false, "", false, {0, {0}}}
 
 /* Ring Sign Messages */
-#define RingSignMessage_init_zero                {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, ""}
-#define MessageRingSignature_init_zero           {false, "", false, {0, {0}}}
+#define RingSignMessage_init_zero                {{{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}/*L*/, 0, 0, {0, {0}}}
+#define MessageRingSignature_init_zero           {{0, {0}}, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}}}
 
 #define EncryptMessage_init_zero                 {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
 #define EncryptedMessage_init_zero               {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
@@ -888,8 +875,10 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define MessageSignature_signature_tag           2
 
 /* Ring Sign Messages */
-#define MessageRingSignature_address_tag         1
-#define MessageRingSignature_signature_tag       2
+#define MessageRingSignature_c_tag               1
+#define MessageRingSignature_s_tag               2
+#define MessageRingSignature_n_tag               3
+#define MessageRingSignature_Yt_tag              4
 
 #define PassphraseAck_passphrase_tag             1
 #define PinMatrixAck_pin_tag                     1
@@ -921,9 +910,10 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SignMessage_coin_name_tag                3
 
 /* Ring Sign Messages */
-#define RingSignMessage_address_n_tag            1
-#define RingSignMessage_message_tag              2
-#define RingSignMessage_coin_name_tag            3
+#define RingSignMessage_L_tag                    1
+#define RingSignMessage_n_tag                    2
+#define RingSignMessage_pi_tag                   3
+#define RingSignMessage_message_tag              4
 
 #define SignTx_outputs_count_tag                 1
 #define SignTx_inputs_count_tag                  2
@@ -983,7 +973,7 @@ extern const pb_field_t MessageSignature_fields[3];
 
 /* Ring Sign Message */
 extern const pb_field_t RingSignMessage_fields[4];
-extern const pb_field_t MessageRingSignature_fields[3];
+extern const pb_field_t MessageRingSignature_fields[4];
 
 extern const pb_field_t EncryptMessage_fields[6];
 extern const pb_field_t EncryptedMessage_fields[4];
@@ -1043,8 +1033,8 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define MessageSignature_size                    105
 
 /* Ring Sign Message */
-#define RingSignMessage_size                     1094
-#define MessageRingSignature_size                105
+//#define RingSignMessage_size                     1094
+//#define MessageRingSignature_size                105
 
 #define EncryptMessage_size                      1131
 #define EncryptedMessage_size                    1168

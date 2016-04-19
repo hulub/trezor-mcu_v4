@@ -61,12 +61,10 @@ MessageSignature.address		max_size:36
 MessageSignature.signature		max_size:65
 
 # Ring Sign Message
-RingSignMessage.address_n		max_count:8
+RingSignMessage.L				max_count:8
 RingSignMessage.message			max_size:1024
-RingSignMessage.coin_name		max_size:17
 
-MessageRingSignature.address		max_size:36
-MessageRingSignature.signature		max_size:65
+MessageRingSignature.s			max_count:8
 
 EncryptMessage.pubkey			max_size:33
 EncryptMessage.message			max_size:1024
