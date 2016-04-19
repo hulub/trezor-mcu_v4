@@ -117,54 +117,49 @@ int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t 
  * 		- my pi index
  * 		- the response (pointer)
  * */
-int cryptoMessageRingSign(const uint8_t *message, size_t message_len, const EncryptMessage_pubkey_t *L, size_t n, uint8_t pi, const MessageRingSignature resp)
-{
-	int result = 0;
-	return result;
-}
 
 int cryptoMessageRingEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size,uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, bignum256 *h)
 {
-//	payload[0] = 0x00;
-//	uint32_t l = ser_length(msg_size, payload + 1);
-//	memcpy(payload + 1 + l, msg, msg_size);
-//	*payload_len = 1 + l + msg_size;
-
-	curve_point H;
-	scalar_multiply(&secp256k1, &h, &H);
-
-	curve_point Yt;
-	curve_point MathG, MathH, Math, Result;
-	bignum256 u;
-	
-	// generate random nonce
-	if (generate_k_random(&secp256k1, &u) != 0) {
-		return 2;
-	}
-
-	// compute MathG = G * u
-	scalar_multiply(&secp256k1, &u, &MathG);
-
-	// compute MathH = H * u
-	point_multiply(&secp256k1, &u, &H, &MathH);
-
-	// compute Yt = H * privkey(bignum)
-	bignum256 privkeyBignum;
-	bn_read_be(privkey, &privkeyBignum);
-	point_multiply(&secp256k1, &privkeyBignum, &H, &Yt);
-
-	// compute Math = MathG + mathH
-	// set Math = MathH
-	point_copy(&MathH, &Math);
-	// Math += MathG
-	point_add(&secp256k1, &MathG, &Math);
-
-	// compute Result = Math * m (my message turned into bignum)
-	bignum256 m;
-	bn_read_be(&msg, &m);
-	point_multiply(&secp256k1, &m, &Math, &Result);
-
-	bn_write_be(&Result.y, payload);
+////	payload[0] = 0x00;
+////	uint32_t l = ser_length(msg_size, payload + 1);
+////	memcpy(payload + 1 + l, msg, msg_size);
+////	*payload_len = 1 + l + msg_size;
+//
+//	curve_point H;
+//	scalar_multiply(&secp256k1, &h, &H);
+//
+//	curve_point Yt;
+//	curve_point MathG, MathH, Math, Result;
+//	bignum256 u;
+//
+//	// generate random nonce
+//	if (generate_k_random(&secp256k1, &u) != 0) {
+//		return 2;
+//	}
+//
+//	// compute MathG = G * u
+//	scalar_multiply(&secp256k1, &u, &MathG);
+//
+//	// compute MathH = H * u
+//	point_multiply(&secp256k1, &u, &H, &MathH);
+//
+//	// compute Yt = H * privkey(bignum)
+//	bignum256 privkeyBignum;
+//	bn_read_be(privkey, &privkeyBignum);
+//	point_multiply(&secp256k1, &privkeyBignum, &H, &Yt);
+//
+//	// compute Math = MathG + mathH
+//	// set Math = MathH
+//	point_copy(&MathH, &Math);
+//	// Math += MathG
+//	point_add(&secp256k1, &MathG, &Math);
+//
+//	// compute Result = Math * m (my message turned into bignum)
+//	bignum256 m;
+//	bn_read_be(&msg, &m);
+//	point_multiply(&secp256k1, &m, &Math, &Result);
+//
+//	bn_write_be(&Result.y, payload);
 
 
 
