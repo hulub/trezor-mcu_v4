@@ -972,8 +972,8 @@ extern const pb_field_t VerifyMessage_fields[4];
 extern const pb_field_t MessageSignature_fields[3];
 
 /* Ring Sign Message */
-extern const pb_field_t RingSignMessage_fields[4];
-extern const pb_field_t MessageRingSignature_fields[4];
+extern const pb_field_t RingSignMessage_fields[5];
+extern const pb_field_t MessageRingSignature_fields[5];
 
 extern const pb_field_t EncryptMessage_fields[6];
 extern const pb_field_t EncryptedMessage_fields[4];
