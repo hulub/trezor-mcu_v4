@@ -379,9 +379,9 @@ extern const pb_field_t TxRequestDetailsType_fields[3];
 extern const pb_field_t TxRequestSerializedType_fields[4];
 extern const pb_field_t IdentityType_fields[7];
 /* Ring Sign Messages */
-extern const pb_field_t RingSignPublicKeyType_fields[2];
-extern const pb_field_t BigNumType_fields[2];
-extern const pb_field_t ECPointType_fields[2];
+extern const pb_field_t RingSignPublicKeyType_fields[3];
+extern const pb_field_t BigNumType_fields[3];
+extern const pb_field_t ECPointType_fields[3];
 
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
