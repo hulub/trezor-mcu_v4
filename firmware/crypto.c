@@ -118,8 +118,8 @@ int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t 
  * 		- the response (pointer)
  * */
 
-int cryptoMessageRingEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size,uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, bignum256 *h)
-{
+//int cryptoMessageRingEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size,uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, bignum256 *h)
+//{
 ////	payload[0] = 0x00;
 ////	uint32_t l = ser_length(msg_size, payload + 1);
 ////	memcpy(payload + 1 + l, msg, msg_size);
@@ -194,8 +194,8 @@ int cryptoMessageRingEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg
 //	memcpy(hmac, out, 8);
 //	*hmac_len = 8;
 
-	return 0;
-}
+//	return 0;
+//}
 
 int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
 {
