@@ -787,7 +787,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 //	}
 
 	// this is for debugging
-	int i;
+	uint8_t i;
 	for (i = 0; i < msg->n; i++) {
 		layoutEncryptMessage(msg->L[i].bytes, msg->L[i].size, false);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
