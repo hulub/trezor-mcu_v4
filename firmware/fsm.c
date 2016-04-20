@@ -789,14 +789,22 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// this is for debugging
 	uint8_t i;
 	for (i = 0; i < msg->n; i++) {
-		layoutEncryptMessage(msg->L[i].bytes, msg->L[i].size, false);
-		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
-				false)) {
+		layoutPublicKey(msg->L[i].bytes);
+		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled,
-					"Ring sign message cancelled");
+					"Show public key cancelled");
 			layoutHome();
 			return;
 		}
+
+//		layoutEncryptMessage(msg->L[i].bytes, msg->L[i].size, false);
+//		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+//				false)) {
+//			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+//					"Ring sign message cancelled");
+//			layoutHome();
+//			return;
+//		}
 	}
 
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
