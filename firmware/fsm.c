@@ -741,7 +741,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	const HDNode *node = fsm_getDerivedNode(NULL, 0);
 	if (!node) {
-		fsm_sendFailure(FailureType_Failure_Other, "fsm_getDerivedNode couldn't get the HDNode without the address info");
+		fsm_sendFailure(FailureType_Failure_Other,
+				"fsm_getDerivedNode couldn't get the HDNode without the address info");
 		return;
 	}
 
@@ -767,7 +768,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 //	const CoinType *coin = 0;
 //	uint8_t address_raw[21];
 //	if (signing) {
-		// I don't care about this case
+	// I don't care about this case
 //		coin = coinByName(msg->coin_name);
 //		if (!coin) {
 //			fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
@@ -784,6 +785,20 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 //		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
 //		ecdsa_get_address_raw(public_key, coin->address_type, address_raw);
 //	}
+
+	// this is for debugging
+	int i;
+	for (i = 0; i < msg->n; i++) {
+		layoutEncryptMessage(msg->L[i].bytes, msg->L[i].size, false);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+				false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Ring sign message cancelled");
+			layoutHome();
+			return;
+		}
+	}
+
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
