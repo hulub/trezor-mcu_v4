@@ -755,6 +755,31 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		return;
 	}
 
+	// display x and y coordinates of the pubkey curve_point
+//	byte[] xc = new byte[33];
+//	byte[] yc = new byte[33];
+
+	layoutPublicKey(pubkey.x);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	layoutPublicKey(pubkey.y);
+		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled,
+					"Show public key cancelled");
+			layoutHome();
+			return;
+		}
+
+
+
+
+
+
 //	// h should be the concatenation of all public keys from L
 //	// for now h is only my public key
 //	bignum256 h;
@@ -787,6 +812,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 //	}
 
 	// this is for debugging
+
 	uint8_t i;
 	for (i = 0; i < msg->n; i++) {
 		layoutPublicKey(msg->L[i].bytes);
