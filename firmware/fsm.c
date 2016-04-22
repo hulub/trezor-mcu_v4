@@ -323,13 +323,15 @@ void fsm_msgGetPublicKey(GetPublicKey *msg) {
 	uint8_t public_key[33];  // copy public key to temporary buffer
 	memcpy(public_key, node->public_key, sizeof(public_key));
 
-	if (msg->has_ecdsa_curve_name) {
-		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
-		if (curve) {
-			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
-			ecdsa_get_public_key33(curve, node->private_key, public_key);
-		}
-	}
+	// removed below so it always uses the public key generated with secp256k1 curve
+
+//	if (msg->has_ecdsa_curve_name) {
+//		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
+//		if (curve) {
+//			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
+//			ecdsa_get_public_key33(curve, node->private_key, public_key);
+//		}
+//	}
 
 	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(public_key);
