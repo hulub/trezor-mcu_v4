@@ -331,7 +331,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg) {
 		}
 	}
 
-//	if (msg->has_show_display && msg->show_display) {
+	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(public_key);
 		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled,
@@ -339,7 +339,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg) {
 			layoutHome();
 			return;
 		}
-//	}
+	}
 
 	resp->node.depth = node->depth;
 	resp->node.fingerprint = node->fingerprint;
