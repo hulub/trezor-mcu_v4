@@ -315,8 +315,10 @@ void fsm_msgGetPublicKey(GetPublicKey *msg) {
 		return;
 	}
 
-	const HDNode *node = fsm_getDerivedNode(msg->address_n,
-			msg->address_n_count);
+	// this is just for testing as in ringSignMessage this is how I retrieve the HDNode
+//	const HDNode *node = fsm_getDerivedNode(msg->address_n,
+//			msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(NULL, 0);
 	if (!node)
 		return;
 
@@ -749,7 +751,9 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	}
 
 	// print the public key
-	layoutPublicKey(node->public_key);
+	uint8_t public_key[33];  // copy public key to temporary buffer
+	memcpy(public_key, node->public_key, sizeof(public_key));
+	layoutPublicKey(public_key);
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
