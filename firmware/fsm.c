@@ -746,6 +746,39 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		return;
 	}
 
+	// The original Point generated form the private key
+	curve_point R;
+	bignum256 k;
+
+	bn_read_be(node->private_key, &k);
+	// compute k*G
+	scalar_multiply(&secp256k1, &k, &R);
+
+	// display the coordinates of R
+	uint8_t xc[33];
+	uint8_t yc[33];
+	bn_write_be(&(R.x), xc);
+	bn_write_be(&(R.y), yc);
+	xc[32]=0x00;
+	yc[32]=0x00;
+
+	layoutPublicKey(xc);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	layoutPublicKey(yc);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+
 	/* Turn the public key into a curve point
 	 */
 	curve_point pubkey;
@@ -756,8 +789,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	}
 
 	// display x and y coordinates of the pubkey curve_point
-	uint8_t xc[33];
-	uint8_t yc[33];
 	bn_write_be(&(pubkey.x), xc);
 	bn_write_be(&(pubkey.y), yc);
 	xc[32]=0x00;
@@ -772,12 +803,12 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	}
 
 	layoutPublicKey(yc);
-		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled,
-					"Show public key cancelled");
-			layoutHome();
-			return;
-		}
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 
 
 
