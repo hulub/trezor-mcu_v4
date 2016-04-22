@@ -758,8 +758,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// display x and y coordinates of the pubkey curve_point
 	uint8_t xc[33];
 	uint8_t yc[33];
-	bn_write_be(&pubkey.x, &xc);
-	bn_write_be(&pubkey.y, &yc);
+	bn_write_be(&pubkey.x, &(xc[0]));
+	bn_write_be(&pubkey.y, &(yc[0]));
 
 	layoutPublicKey(&xc);
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
