@@ -770,7 +770,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	}
 
 	// print size of l
-	layoutNumber((uint32_t) msg->L.size, "size of l:");
+	layoutNumber((uint32_t) sizeof(msg->L), "size of l:");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
