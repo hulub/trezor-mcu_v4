@@ -640,8 +640,9 @@ typedef struct _WordAck {
  * ... for now it looks just as SignMessage and MessageSignature
  *  */
 typedef struct _RingSignMessage {
+	size_t L_count;
 	RingSignPublicKeyType L[8];
-	size_t n;
+	uint32_t n;
 	uint32_t pi;
 	SignMessage_message_t message;
 } RingSignMessage;
