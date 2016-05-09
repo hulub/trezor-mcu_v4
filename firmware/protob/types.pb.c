@@ -105,8 +105,7 @@ const pb_field_t IdentityType_fields[7] = {
 
 /* Ring Sign Message */
 const pb_field_t RingSignPublicKeyType_fields[3] = {
-    PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, RingSignPublicKeyType, size, size, 0),
-    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, RingSignPublicKeyType, bytes, size, 0),
+    PB_FIELD2(  1, BYTES   , REQUIRED, STATIC  , FIRST, RingSignPublicKeyType, bytes, bytes, 0),
     PB_LAST_FIELD
 };
 
