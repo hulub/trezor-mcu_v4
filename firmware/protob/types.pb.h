@@ -241,6 +241,7 @@ typedef struct _TransactionType {
 
 /* Ring Sign Messages */
 typedef struct _RingSignPublicKeyType{
+	size_t wrongSize;
     size_t size;
     uint8_t bytes[33];
 } RingSignPublicKeyType;
