@@ -1,0 +1,136 @@
+	// implementation of the LSAG generation algorithm
+	bignum256 c[msg->n];
+	bignum256 s[msg->n];
+	curve_point MathG, MathH, MathT, Result;
+	uint32_t index;
+
+	// compute h = new bignum out of concatenation of all public keys
+	bignum256 h;
+	uint8_t hash[32];
+	uint8_t ytotal[65 * msg->n];
+	uint8_t i;
+	for (i = 0; i < msg->n; i++)
+		memcpy(ytotal + (i * 65), msg->L[i].bytes, 65);
+	sha256_Raw(&ytotal, 65 * msg->n, &hash);	// I'm not sure if this is the way to do it
+	sha256_Raw(&hash, 32, &hash);				// This should be tested out
+	bn_read_be(&hash, &h);
+
+	// compute curve point H = G * h
+	curve_point H;
+	scalar_multiply(&secp256k1, &h, &H);
+
+	// randomly pick u
+	bignum256 u;
+	generate_k_random(&secp256k1, &u);
+
+	// compute c_(pi+1)
+	index = (msg->pi + 1) % msg->n;
+	scalar_multiply(&secp256k1, &u, &MathG);
+	point_multiply(&secp256k1, &u, &H, &MathH);
+	// add MathG + MathH ... copy MathG into MathT, add MathH to MathT
+	point_copy(&MathG, &MathT);
+	point_add(&secp256k1, &MathH, &MathT);
+	// turn the message into a BigNum m
+	bignum256 m;
+	sha256_Raw(msg->message.bytes, msg->message.size, &hash);	// same comments
+	sha256_Raw(&hash, 32, &hash);								// as the hashing above
+	bn_read_be(&hash, &m);
+	// compute c_(pi+1) = y coordinate f the point Result = MathT * m
+	point_multiply(&secp256k1, &m, &MathT, &Result);
+	uint8_t yCoordinate[32];
+	bn_write_be(&Result.y, &yCoordinate);		// I don't know if I have to copy the whole BigNum as byte[]
+	bn_read_be(&yCoordinate, &c[index]);		// and then recreate the BigNum, or it is enough just to say
+												// c[index] = R.y ???
+
+	// compute the rest of the chain
+	// you have to do kind of the same ... but in a for loop
+
+
+
+
+
+	// print the public key
+	uint8_t public_key[33];  // copy public key to temporary buffer
+	memcpy(public_key, node->public_key, sizeof(public_key));
+	layoutPublicKey(public_key);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+
+	// The original Point generated form the private key
+	curve_point R;
+	bignum256 k;
+
+	bn_read_be(node->private_key, &k);
+	// compute k*G
+	scalar_multiply(&secp256k1, &k, &R);
+
+	// display the coordinates of R
+	uint8_t xc[33];
+	uint8_t yc[33];
+	bn_write_be(&R.x, xc);
+	bn_write_be(&R.y, yc);
+	xc[32]=0x00;
+	yc[32]=0x00;
+
+	layoutPublicKey(xc);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	layoutPublicKey(yc);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+
+	/* Turn the public key into a curve point
+	 */
+	curve_point pubkey;
+	if (ecdsa_read_pubkey(&secp256k1, node->public_key, &pubkey) == 0) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError,
+				"The public key is invalid");
+		return;
+	}
+
+	// display x and y coordinates of the pubkey curve_point
+	bn_write_be(&pubkey.x, xc);
+	bn_write_be(&pubkey.y, yc);
+	xc[32]=0x00;
+	yc[32]=0x00;
+
+	layoutPublicKey(xc);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	layoutPublicKey(yc);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+
+
+
+
+
+//	// h should be the concatenation of all public keys from L
+//	// for now h is only my public key
+//	bignum256 h;
+//	bn_read_be(node->public_key, &h);
