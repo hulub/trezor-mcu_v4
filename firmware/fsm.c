@@ -782,7 +782,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	uint8_t i;
 	for (i = 0; i < msg->n; i++) {
 		// print size of L[i]
-		layoutNumber((uint32_t) msg->L[i].size, "size of L[" + i + "]:" );
+		layoutNumber((uint32_t) msg->L[i].size, "size of L[i]:" );
 		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled,
 					"Show public key cancelled");
