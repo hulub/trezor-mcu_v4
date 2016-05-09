@@ -315,25 +315,21 @@ void fsm_msgGetPublicKey(GetPublicKey *msg) {
 		return;
 	}
 
-	// this is just for testing as in ringSignMessage this is how I retrieve the HDNode
-//	const HDNode *node = fsm_getDerivedNode(msg->address_n,
-//			msg->address_n_count);
-	const HDNode *node = fsm_getDerivedNode(NULL, 0);
+	const HDNode *node = fsm_getDerivedNode(msg->address_n,
+			msg->address_n_count);
 	if (!node)
 		return;
 
 	uint8_t public_key[33];  // copy public key to temporary buffer
 	memcpy(public_key, node->public_key, sizeof(public_key));
 
-	// removed below so it always uses the public key generated with secp256k1 curve
-
-//	if (msg->has_ecdsa_curve_name) {
-//		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
-//		if (curve) {
-//			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
-//			ecdsa_get_public_key33(curve, node->private_key, public_key);
-//		}
-//	}
+	if (msg->has_ecdsa_curve_name) {
+		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
+		if (curve) {
+			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
+			ecdsa_get_public_key33(curve, node->private_key, public_key);
+		}
+	}
 
 	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(public_key);
@@ -736,6 +732,7 @@ void fsm_msgSignMessage(SignMessage *msg) {
  * ... for now it just sends back a MessageSignature that does not have an address
  * ... the returned message has just the encrypted message
  *  */
+
 void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	if (!storage_isInitialized()) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized,
@@ -750,120 +747,20 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		return;
 	}
 
-	// print the public key
-	uint8_t public_key[33];  // copy public key to temporary buffer
-	memcpy(public_key, node->public_key, sizeof(public_key));
-	layoutPublicKey(public_key);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-
-	// The original Point generated form the private key
-	curve_point R;
-	bignum256 k;
-
-	bn_read_be(node->private_key, &k);
-	// compute k*G
-	scalar_multiply(&secp256k1, &k, &R);
-
-	// display the coordinates of R
-	uint8_t xc[33];
-	uint8_t yc[33];
-	bn_write_be(&R.x, xc);
-	bn_write_be(&R.y, yc);
-	xc[32]=0x00;
-	yc[32]=0x00;
-
-	layoutPublicKey(xc);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-	layoutPublicKey(yc);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-
-	/* Turn the public key into a curve point
-	 */
-	curve_point pubkey;
-	if (ecdsa_read_pubkey(&secp256k1, node->public_key, &pubkey) == 0) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError,
-				"The public key is invalid");
-		return;
-	}
-
-	// display x and y coordinates of the pubkey curve_point
-	bn_write_be(&pubkey.x, xc);
-	bn_write_be(&pubkey.y, yc);
-	xc[32]=0x00;
-	yc[32]=0x00;
-
-	layoutPublicKey(xc);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-	layoutPublicKey(yc);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-
-
-
-
-
-//	// h should be the concatenation of all public keys from L
-//	// for now h is only my public key
-//	bignum256 h;
-//	bn_read_be(node->public_key, &h);
-//
-//	// I have no ideea what this is
-//	bool display_only = true;
-//	bool signing = false;
-
 	RESP_INIT(MessageRingSignature);
-//	const CoinType *coin = 0;
-//	uint8_t address_raw[21];
-//	if (signing) {
-	// I don't care about this case
-//		coin = coinByName(msg->coin_name);
-//		if (!coin) {
-//			fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
-//			return;
-//		}
-//		if (!protectPin(true)) {
-//			layoutHome();
-//			return;
-//		}
-//		node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
-//		if (!node)
-//			return;
-//		uint8_t public_key[33];
-//		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
-//		ecdsa_get_address_raw(public_key, coin->address_type, address_raw);
-//	}
 
 	// this is for debugging
 
+	// print n
+	layoutNumber(msg->pi);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	// print all public keys from L
 	uint8_t i;
 	for (i = 0; i < msg->n; i++) {
 		layoutPublicKey(msg->L[i].bytes);
@@ -873,17 +770,9 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 			layoutHome();
 			return;
 		}
-
-//		layoutEncryptMessage(msg->L[i].bytes, msg->L[i].size, false);
-//		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
-//				false)) {
-//			fsm_sendFailure(FailureType_Failure_ActionCancelled,
-//					"Ring sign message cancelled");
-//			layoutHome();
-//			return;
-//		}
 	}
 
+	// print message
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,

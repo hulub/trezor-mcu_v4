@@ -281,6 +281,15 @@ void layoutPublicKey(const uint8_t *pubkey)
 		desc, str[0], str[1], str[2], str[3], NULL);
 }
 
+void layoutNumber(const uint32_t *num)
+{
+	char desc[16], hex[16];
+	strlcpy(desc, "Number:", sizeof(desc));
+	uint32hex(num, hex);
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, NULL, "Continue", NULL,
+		desc, hex, NULL, NULL, NULL, NULL);
+}
+
 void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 {
 	char row_proto[8 + 11 + 1];
