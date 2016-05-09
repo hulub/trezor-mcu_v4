@@ -281,12 +281,11 @@ void layoutPublicKey(const uint8_t *pubkey)
 		desc, str[0], str[1], str[2], str[3], NULL);
 }
 
-void layoutNumber(const uint32_t *num)
+void layoutNumber(uint32_t num)
 {
 	char desc[16], hex[16];
-	uint32_t number = (uint32_t) num;
 	strlcpy(desc, "Number:", sizeof(desc));
-	uint32hex(number, hex);
+	uint32hex(num, hex);
 	layoutDialogSwipe(DIALOG_ICON_QUESTION, NULL, "Continue", NULL,
 		desc, hex, NULL, NULL, NULL, NULL);
 }
