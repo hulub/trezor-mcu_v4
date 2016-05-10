@@ -661,7 +661,6 @@ extern const uint32_t ResetDevice_strength_default;
 extern const char ResetDevice_language_default[17];
 extern const char RecoveryDevice_language_default[17];
 extern const char SignMessage_coin_name_default[17];
-extern const char RingSignMessage_coin_name_default[17];
 extern const char EncryptMessage_coin_name_default[17];
 extern const char EstimateTxSize_coin_name_default[17];
 extern const char SignTx_coin_name_default[17];
@@ -703,8 +702,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define MessageSignature_init_default            {false, "", false, {0, {0}}}
 
 /* Ring Sign Message */
-#define RingSignMessage_init_default             {{8, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}/*L*/, 0, 0, {0, {0}}}
-#define MessageRingSignature_init_default        {{0, {0}}, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}}}
+//#define RingSignMessage_init_default             {{8, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}/*L*/, 0, 0, {0, {0}}}
+//#define MessageRingSignature_init_default        {{0, {0}}, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}}}
 
 #define EncryptMessage_init_default              {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin"}
 #define EncryptedMessage_init_default            {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
@@ -762,8 +761,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define MessageSignature_init_zero               {false, "", false, {0, {0}}}
 
 /* Ring Sign Messages */
-#define RingSignMessage_init_zero                {{{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}/*L*/, 0, 0, {0, {0}}}
-#define MessageRingSignature_init_zero           {{0, {0}}, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}}}
+//#define RingSignMessage_init_zero                {{{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}/*L*/, 0, 0, {0, {0}}}
+//#define MessageRingSignature_init_zero           {{0, {0}}, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}}}
 
 #define EncryptMessage_init_zero                 {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
 #define EncryptedMessage_init_zero               {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}

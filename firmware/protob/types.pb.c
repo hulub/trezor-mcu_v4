@@ -109,9 +109,8 @@ const pb_field_t RingSignPublicKeyType_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t BigNumType_fields[3] = {
-    PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, BigNumType, size, size, 0),
-    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, BigNumType, bytes, size, 0),
+const pb_field_t BigNumType_fields[2] = {
+    PB_FIELD2(  1, BYTES   , REQUIRED, STATIC  , FIRST, BigNumType, bytes, bytes, 0),
     PB_LAST_FIELD
 };
 
