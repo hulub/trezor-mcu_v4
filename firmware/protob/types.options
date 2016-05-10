@@ -34,7 +34,3 @@ IdentityType.user			max_size:64
 IdentityType.host			max_size:64
 IdentityType.port			max_size:6
 IdentityType.path			max_size:256
-
-RingSignPublicKeyType.public_key	max_size:33
-
-BigNumType.value					max_size:32

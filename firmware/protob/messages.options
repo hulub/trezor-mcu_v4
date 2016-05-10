@@ -60,12 +60,6 @@ VerifyMessage.message			max_size:1024
 MessageSignature.address		max_size:36
 MessageSignature.signature		max_size:65
 
-# Ring Sign Message
-RingSignMessage.L				max_count:8
-RingSignMessage.message			max_size:1024
-
-MessageRingSignature.s			max_count:8
-
 EncryptMessage.pubkey			max_size:33
 EncryptMessage.message			max_size:1024
 EncryptMessage.address_n		max_count:8

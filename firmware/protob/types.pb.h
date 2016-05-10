@@ -241,7 +241,7 @@ typedef struct _TransactionType {
 
 /* Ring Sign Messages */
 typedef struct _RingSignPublicKeyType{
-	size_t wrongSize;
+//	size_t wrongSize;  // this is stupid ... should be removed ... there should be another way to read that
     size_t size;
     uint8_t bytes[33];
 } RingSignPublicKeyType;
@@ -380,7 +380,7 @@ extern const pb_field_t TxRequestDetailsType_fields[3];
 extern const pb_field_t TxRequestSerializedType_fields[4];
 extern const pb_field_t IdentityType_fields[7];
 /* Ring Sign Messages */
-extern const pb_field_t RingSignPublicKeyType_fields[3];
+extern const pb_field_t RingSignPublicKeyType_fields[2];
 extern const pb_field_t BigNumType_fields[3];
 extern const pb_field_t ECPointType_fields[3];
 
