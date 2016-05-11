@@ -769,36 +769,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		return;
 	}
 
-	// print size of l
-	layoutNumber((uint32_t) sizeof(msg->L), "size of l:");
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-	// print all public keys from L
-	uint8_t i;
-	for (i = 0; i < msg->n; i++) {
-		// print size of L[i]
-		layoutNumber((uint32_t) msg->L[i].size, "size of L[i]:");
-		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled,
-					"Show public key cancelled");
-			layoutHome();
-			return;
-		}
-
-		layoutPublicKey(msg->L[i].bytes);
-		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled,
-					"Show public key cancelled");
-			layoutHome();
-			return;
-		}
-	}
-
 	// print message
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -810,7 +780,34 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	layoutProgressSwipe("Ring Signing...", 0);
 
-	// this is where the encryption happens
+	// implementation of the LSAG generation algorithm
+//	bignum256 c[msg->n];
+//	bignum256 s[msg->n];
+//	curve_point MathG, MathH, MathT, Result;
+//	uint32_t index;
+
+	// compute h = new bignum out of concatenation of all public keys
+	bignum256 h;
+	uint8_t hash[32];
+	uint8_t ytotal[65 * msg->n];
+	uint8_t i;
+	for (i = 0; i < msg->n; i++)
+		memcpy(ytotal + (i * 65), msg->L[i].bytes, 65);
+	sha256_Raw(&ytotal, 65 * msg->n, &hash); // I'm not sure if this is the way to do it
+	sha256_Raw(&hash, 32, &hash);				// This should be tested out
+	bn_read_be(&hash, &h);
+
+	uint8_t printhash[33];
+	printhash[0] = 0;
+	memcpy(printhash + 1, hash, 32);
+
+	layoutPublicKey(printhash);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 
 	msg_write(MessageType_MessageType_MessageRingSignature, resp);
 	layoutHome();
@@ -834,8 +831,9 @@ void fsm_msgGetPublicKey65(GetPublicKey65 *msg) {
 
 	RESP_INIT(PublicKey65);
 
-	resp->publicKey.size=65;
-	ecdsa_get_public_key65(&secp256k1, node->private_key, resp->publicKey.bytes);
+	resp->publicKey.size = 65;
+	ecdsa_get_public_key65(&secp256k1, node->private_key,
+			resp->publicKey.bytes);
 
 	// populate resp with the bytes of the public key
 
