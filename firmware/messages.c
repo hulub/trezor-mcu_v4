@@ -65,6 +65,9 @@ static const struct MessagesMap_t MessagesMap[] = {
 	/* Ring Sign Message */
 	{'n', 'i', MessageType_MessageType_RingSignMessage,		RingSignMessage_fields,		(void (*)(void *))fsm_msgRingSignMessage},
 
+	/* Get Public Key 65 */
+	{'n', 'i', MessageType_MessageType_GetPublicKey65,		GetPublicKey65_fields,		(void (*)(void *))fsm_msgGetPublicKey65},
+
 	{'n', 'i', MessageType_MessageType_SignIdentity,		SignIdentity_fields,		(void (*)(void *))fsm_msgSignIdentity},
 	{'n', 'i', MessageType_MessageType_VerifyMessage,		VerifyMessage_fields,		(void (*)(void *))fsm_msgVerifyMessage},
 	{'n', 'i', MessageType_MessageType_EncryptMessage,		EncryptMessage_fields,		(void (*)(void *))fsm_msgEncryptMessage},
@@ -89,6 +92,9 @@ static const struct MessagesMap_t MessagesMap[] = {
 
 	/* Ring Sign Message */
 	{'n', 'o', MessageType_MessageType_MessageRingSignature,MessageRingSignature_fields,0},
+
+	/* Public Key 65 */
+	{'n', 'o', MessageType_MessageType_PublicKey65,			PublicKey65_fields,			0},
 
 	{'n', 'o', MessageType_MessageType_SignedIdentity,		SignedIdentity_fields,		0},
 	{'n', 'o', MessageType_MessageType_EncryptedMessage,	EncryptedMessage_fields,	0},

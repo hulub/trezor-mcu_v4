@@ -54,6 +54,9 @@ void fsm_msgVerifyMessage(VerifyMessage *msg);
 /* Ring Sign Message */
 void fsm_msgRingSignMessage(RingSignMessage *msg);
 
+/* Public Key 65 */
+void fsm_msgGetPublicKey65(GetPublicKey65 *msg);
+
 void fsm_msgSignIdentity(SignIdentity *msg);
 void fsm_msgEncryptMessage(EncryptMessage *msg);
 void fsm_msgDecryptMessage(DecryptMessage *msg);

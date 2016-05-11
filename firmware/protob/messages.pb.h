@@ -64,6 +64,9 @@ typedef enum _MessageType {
     // Ring Signature Messages
     MessageType_MessageType_RingSignMessage = 60,
     MessageType_MessageType_MessageRingSignature = 61,
+	// Public Kry 65 Messages
+	MessageType_MessageType_GetPublicKey65 = 62,
+	MessageType_MessageType_PublicKey65 = 63,
     // Debug Messages
     MessageType_MessageType_DebugLinkDecision = 100,
     MessageType_MessageType_DebugLinkGetState = 101,
@@ -639,9 +642,14 @@ typedef struct _WordAck {
 /* Ring Signature struct definitions
  * ... for now it looks just as SignMessage and MessageSignature
  *  */
+typedef struct {
+    size_t size;
+    uint8_t bytes[33];
+} RingSignPublicKey_t;
+
 typedef struct _RingSignMessage {
 	size_t L_count;
-	RingSignPublicKeyType L[8];
+	RingSignPublicKey_t L[8];
 	uint32_t n;
 	uint32_t pi;
 	SignMessage_message_t message;
@@ -653,6 +661,15 @@ typedef struct _MessageRingSignature {
 	size_t n;
 	ECPointType Yt;
 } MessageRingSignature;
+
+/* Public Key 65 message */
+typedef struct _GetPublicKey65 {
+    uint8_t dummy_field;
+} GetPublicKey65;
+
+typedef struct _PublicKey65 {
+	RingSignPublicKey_t publicKey;
+} PublicKey65;
 
 /* Default values for struct fields */
 extern const char GetAddress_coin_name_default[17];
@@ -915,6 +932,9 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define RingSignMessage_pi_tag                   3
 #define RingSignMessage_message_tag              4
 
+/* Public Key 65 */
+#define PublicKey65_publicKey_tag                1
+
 #define SignTx_outputs_count_tag                 1
 #define SignTx_inputs_count_tag                  2
 #define SignTx_coin_name_tag                     3
@@ -974,6 +994,10 @@ extern const pb_field_t MessageSignature_fields[3];
 /* Ring Sign Message */
 extern const pb_field_t RingSignMessage_fields[5];
 extern const pb_field_t MessageRingSignature_fields[5];
+
+/* Public Key 65 */
+extern const pb_field_t GetPublicKey65_fields[1];
+extern const pb_field_t PublicKey65_fields[2];
 
 extern const pb_field_t EncryptMessage_fields[6];
 extern const pb_field_t EncryptedMessage_fields[4];

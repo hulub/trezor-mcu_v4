@@ -240,6 +240,16 @@ const pb_field_t MessageRingSignature_fields[5] = {
     PB_LAST_FIELD
 };
 
+/* Public Key 65 */
+const pb_field_t GetPublicKey65_fields[1] = {
+    PB_LAST_FIELD
+};
+
+const pb_field_t PublicKey65_fields[2] = {
+	PB_FIELD2(  1, BYTES   , REQUIRED, STATIC  , FIRST, PublicKey65, publicKey, publicKey, 0),
+    PB_LAST_FIELD
+};
+
 const pb_field_t EncryptMessage_fields[6] = {
     PB_FIELD2(  1, BYTES   , OPTIONAL, STATIC  , FIRST, EncryptMessage, pubkey, pubkey, 0),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, EncryptMessage, message, pubkey, 0),

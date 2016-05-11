@@ -782,7 +782,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	uint8_t i;
 	for (i = 0; i < msg->n; i++) {
 		// print size of L[i]
-		layoutNumber((uint32_t) msg->L[i].size, "size of L[i]:" );
+		layoutNumber((uint32_t) msg->L[i].size, "size of L[i]:");
 		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled,
 					"Show public key cancelled");
@@ -811,25 +811,34 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	layoutProgressSwipe("Ring Signing...", 0);
 
 	// this is where the encryption happens
-//	if (cryptoMessageRingEncrypt( &pubkey
-//			                    ,  msg->message.bytes
-//								,  msg->message.size
-//								,  resp->nonce.bytes
-//								, &(resp->nonce.size)
-//								,  resp->message.bytes
-//								, &(resp->message.size)
-//								,  resp->hmac.bytes
-//								, &(resp->hmac.size)
-//								,  node->private_key
-//								, &h ) != 0) {
-//		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Error encrypting message");
-//		layoutHome();
-//		return;
-//	}
-//	resp->has_nonce = true;
-//	resp->has_message = true;
-//	resp->has_hmac = true;
+
 	msg_write(MessageType_MessageType_MessageRingSignature, resp);
+	layoutHome();
+}
+
+/* Get Public Key 65 */
+void fsm_msgGetPublicKey65(GetPublicKey65 *msg) {
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized,
+				"Device not initialized");
+		return;
+	}
+
+	const HDNode *node = fsm_getDerivedNode(NULL, 0);
+	if (!node) {
+		fsm_sendFailure(FailureType_Failure_Other,
+				"fsm_getDerivedNode couldn't get the HDNode without the address info");
+		return;
+	}
+
+	RESP_INIT(PublicKey65);
+
+	resp->publicKey.size=33;
+	ecdsa_get_public_key33(&secp256k1, node->private_key, &resp->publicKey.bytes);
+
+	// populate resp with the bytes of the public key
+
+	msg_write(MessageType_MessageType_PublicKey65, resp);
 	layoutHome();
 }
 
