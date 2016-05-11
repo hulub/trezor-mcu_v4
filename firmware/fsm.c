@@ -850,8 +850,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// turn private key into a bignum
 	bignum256 privateKeyBigNum;
 	bn_read_be(node->private_key, &privateKeyBigNum);
-	bn_multiply(&privateKeyBigNum, &temp, &secp256k1->prime);
-	bn_subtractmod(&u, &temp, &s[0], &secp256k1->prime);
+	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.prime);
+	bn_subtractmod(&u, &temp, &s[0], &secp256k1.prime);
 
 	// set resp->n
 	resp->n = msg->n;
@@ -865,10 +865,10 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
 	// copy x coordinate of Yt
 	resp->YtDotX.size=32;
-	bn_write_be(&Yt->x, resp->YtDotX.bytes);
+	bn_write_be(&Yt.x, resp->YtDotX.bytes);
 	// copy y coordinate of Yt
 	resp->YtDotY.size=32;
-	bn_write_be(&Yt->y, resp->YtDotY.bytes);
+	bn_write_be(&Yt.y, resp->YtDotY.bytes);
 
 	msg_write(MessageType_MessageType_MessageRingSignature, resp);
 	layoutHome();
