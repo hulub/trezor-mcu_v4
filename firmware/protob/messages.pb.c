@@ -225,7 +225,7 @@ const pb_field_t MessageSignature_fields[3] = {
 
 /* Ring Sign Message */
 const pb_field_t RingSignMessage_fields[5] = {
-	PB_FIELD2(  1, MESSAGE , REPEATED, STATIC  , FIRST, RingSignMessage, L, L, &RingSignPublicKeyType_fields),
+	PB_FIELD2(  1, BYTES   , REPEATED, STATIC  , FIRST, RingSignMessage, L, L, 0),
     PB_FIELD2(  2, UINT32  , REQUIRED, STATIC  , OTHER, RingSignMessage, n, L, 0),
     PB_FIELD2(  3, UINT32  , REQUIRED, STATIC  , OTHER, RingSignMessage, pi, n, 0),
 	PB_FIELD2(  4, BYTES   , REQUIRED, STATIC  , OTHER, RingSignMessage, message, pi, 0),
