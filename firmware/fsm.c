@@ -781,9 +781,9 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	layoutProgressSwipe("Ring Signing...", 0);
 
 	// implementation of the LSAG generation algorithm
-//	bignum256 c[msg->n];
-//	bignum256 s[msg->n];
-//	curve_point MathG, MathH, MathT, Result;
+	bignum256 c[msg->n];
+	bignum256 s[msg->n];
+	curve_point H, MathG, MathH, MathT, Result, Yt;
 //	uint32_t index;
 
 	// compute h = new bignum out of concatenation of all public keys
@@ -797,6 +797,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	sha256_Raw(hash, 32, hash);				// This should be tested out
 	bn_read_be(hash, &h);
 
+	// debug
+	// print h
 	uint8_t printhash[33];
 	printhash[0] = 0;
 	memcpy(printhash + 1, hash, 32);
@@ -808,6 +810,65 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		layoutHome();
 		return;
 	}
+
+	// compute H
+	scalar_multiply(&secp256k1, &h, &H);
+
+	// randomly pick u
+	bignum256 u;
+	generate_k_random(&secp256k1, &u);
+
+	// compute MathG = G * u
+	scalar_multiply(&secp256k1, &u, &MathG);
+
+	// compute MathH = H * u
+	point_multiply(&secp256k1, &u, &H, &MathH);
+
+	// compute MathT = MathG + MathH
+	// copy MathG into MathT
+	point_copy(&MathG, &MathT);
+	// add MathH to MathT
+	point_add(&secp256k1, &MathH, &MathT);
+
+	// turn message into a bignum
+	bignum256 m;
+	uint8_t mhash[32];
+	// hash the message to turn it into 32 byte array
+	sha256_Raw(msg->message.bytes, msg->message.size, mhash);
+	bn_read_be(mhash, &m);
+
+	// compute Result = MathT * m
+	point_multiply(&secp256k1, &m, &MathT, &Result);
+
+	// c[0] = Result.y
+	c[0] = Result->y;
+	resp->c.size=32;
+	bn_write_be(&c[0], resp->c.bytes);
+
+	// compute s[0] = u - x_pi * c_pi ... everything modulo prime
+	bignum256 temp = c[0];
+	// turn private key into a bignum
+	bignum256 privateKeyBigNum;
+	bn_read_be(node->private_key, &privateKeyBigNum);
+	bn_multiply(&privateKeyBigNum, &temp, &secp256k1->prime);
+	bn_subtractmod(&u, &temp, &s[0], &secp256k1->prime);
+
+	// set resp->n
+	resp->n = msg->n;
+
+	// set resp -> s[]
+	resp->s_count = msg->n;
+	resp->s[0].size=32;
+	bn_write_be(&s[0], resp->s[0].bytes);
+
+	// compute Yt
+	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
+	// copy x coordinate of Yt
+	resp->YtDotX.size=32;
+	bn_write_be(&Yt->x, resp->YtDotX.bytes);
+	// copy y coordinate of Yt
+	resp->YtDotY.size=32;
+	bn_write_be(&Yt->y, resp->YtDotY.bytes);
 
 	msg_write(MessageType_MessageType_MessageRingSignature, resp);
 	layoutHome();

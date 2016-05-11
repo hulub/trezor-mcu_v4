@@ -232,11 +232,12 @@ const pb_field_t RingSignMessage_fields[5] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t MessageRingSignature_fields[5] = {
+const pb_field_t MessageRingSignature_fields[6] = {
     PB_FIELD2(  1, BYTES   , REQUIRED, STATIC  , FIRST, MessageRingSignature, c, c, 0),
-    PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, MessageRingSignature, s, c, 0),
+    PB_FIELD2(  2, BYTES   , REPEATED, STATIC  , OTHER, MessageRingSignature, s, c, 0),
     PB_FIELD2(  3, UINT32  , REQUIRED, STATIC  , OTHER, MessageRingSignature, n, s, 0),
-    PB_FIELD2(  4, BYTES   , REQUIRED, STATIC  , OTHER, MessageRingSignature, Yt, n, 0),
+    PB_FIELD2(  4, BYTES   , REQUIRED, STATIC  , OTHER, MessageRingSignature, YtDotX, n, 0),
+	PB_FIELD2(  5, BYTES   , REQUIRED, STATIC  , OTHER, MessageRingSignature, YtDotY, YtDotX, 0),
     PB_LAST_FIELD
 };
 

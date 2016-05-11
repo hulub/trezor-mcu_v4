@@ -655,11 +655,18 @@ typedef struct _RingSignMessage {
 	SignMessage_message_t message;
 } RingSignMessage;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} BigNum_t;
+
 typedef struct _MessageRingSignature {
-	BigNumType c;
-	BigNumType s[8];
-	size_t n;
-	ECPointType Yt;
+	BigNum_t c;
+	size_t s_count;
+	BigNum_t s[8];
+	uint32_t n;
+	BigNum_t YtDotX;
+	BigNum_t YtDotY;
 } MessageRingSignature;
 
 /* Public Key 65 message */
@@ -895,7 +902,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define MessageRingSignature_c_tag               1
 #define MessageRingSignature_s_tag               2
 #define MessageRingSignature_n_tag               3
-#define MessageRingSignature_Yt_tag              4
+#define MessageRingSignature_YtDotX_tag          4
+#define MessageRingSignature_YtDotY_tag          5
 
 #define PassphraseAck_passphrase_tag             1
 #define PinMatrixAck_pin_tag                     1
@@ -993,7 +1001,7 @@ extern const pb_field_t MessageSignature_fields[3];
 
 /* Ring Sign Message */
 extern const pb_field_t RingSignMessage_fields[5];
-extern const pb_field_t MessageRingSignature_fields[5];
+extern const pb_field_t MessageRingSignature_fields[6];
 
 /* Public Key 65 */
 extern const pb_field_t GetPublicKey65_fields[1];
