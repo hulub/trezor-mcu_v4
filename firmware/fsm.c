@@ -818,6 +818,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 /* Get Public Key 65 */
 void fsm_msgGetPublicKey65(GetPublicKey65 *msg) {
+	(void) msg;
 	if (!storage_isInitialized()) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized,
 				"Device not initialized");
