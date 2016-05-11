@@ -793,9 +793,9 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	uint8_t i;
 	for (i = 0; i < msg->n; i++)
 		memcpy(ytotal + (i * 65), msg->L[i].bytes, 65);
-	sha256_Raw(&ytotal, 65 * msg->n, &hash); // I'm not sure if this is the way to do it
-	sha256_Raw(&hash, 32, &hash);				// This should be tested out
-	bn_read_be(&hash, &h);
+	sha256_Raw(ytotal, 65 * msg->n, hash); // I'm not sure if this is the way to do it
+	sha256_Raw(hash, 32, hash);				// This should be tested out
+	bn_read_be(hash, &h);
 
 	uint8_t printhash[33];
 	printhash[0] = 0;
