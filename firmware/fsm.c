@@ -841,7 +841,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	point_multiply(&secp256k1, &m, &MathT, &Result);
 
 	// c[0] = Result.y
-	c[0] = Result->y;
+	c[0] = Result.y;
 	resp->c.size=32;
 	bn_write_be(&c[0], resp->c.bytes);
 
