@@ -1,10 +1,6 @@
 [submodule "vendor/libopencm3"]
 	path = vendor/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
-[submodule "vendor/trezor-common"]
-	path = vendor/trezor-common
-	
-	url = https://github.com/hulub/trezor-common.git
 [submodule "vendor/trezor-crypto"]
 	path = vendor/trezor-crypto
 	url = https://github.com/trezor/trezor-crypto.git
