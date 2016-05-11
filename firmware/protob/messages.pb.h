@@ -644,7 +644,7 @@ typedef struct _WordAck {
  *  */
 typedef struct {
     size_t size;
-    uint8_t bytes[33];
+    uint8_t bytes[65];
 } RingSignPublicKey_t;
 
 typedef struct _RingSignMessage {
