@@ -834,7 +834,7 @@ void fsm_msgGetPublicKey65(GetPublicKey65 *msg) {
 	RESP_INIT(PublicKey65);
 
 	resp->publicKey.size=33;
-	ecdsa_get_public_key33(&secp256k1, node->private_key, &resp->publicKey.bytes);
+	ecdsa_get_public_key33(&secp256k1, node->private_key, resp->publicKey.bytes);
 
 	// populate resp with the bytes of the public key
 
