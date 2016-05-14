@@ -814,7 +814,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// print u
 	uint8_t ubytes[32];
-	bn_write_be(u, ubytes);
+	bn_write_be(&u, ubytes);
 	layoutBigNum(ubytes, "u : ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
