@@ -793,17 +793,11 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	uint8_t i;
 	for (i = 0; i < msg->n; i++)
 		memcpy(ytotal + (i * 65), msg->L[i].bytes, 65);
-	sha256_Raw(ytotal, 65 * msg->n, hash); // I'm not sure if this is the way to do it
-	sha256_Raw(hash, 32, hash);				// This should be tested out
+	sha256_Raw(ytotal, 65 * msg->n, hash); // I do the hashing only once now ... this should be enough
 	bn_read_be(hash, &h);
 
-	// debug
 	// print h
-	uint8_t printhash[33];
-	printhash[0] = 0;
-	memcpy(printhash + 1, hash, 32);
-
-	layoutPublicKey(printhash);
+	layoutBigNum(h, "h : ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -817,6 +811,15 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// randomly pick u
 	bignum256 u;
 	generate_k_random(&secp256k1, &u);
+
+	// print u
+	layoutBigNum(u, "u : ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 
 	// compute MathG = G * u
 	scalar_multiply(&secp256k1, &u, &MathG);
@@ -837,12 +840,21 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	sha256_Raw(msg->message.bytes, msg->message.size, mhash);
 	bn_read_be(mhash, &m);
 
+	// print m
+	layoutBigNum(m, "m : ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
 	// compute Result = MathT * m
 	point_multiply(&secp256k1, &m, &MathT, &Result);
 
 	// c[0] = Result.y
 	c[0] = Result.y;
-	resp->c.size=32;
+	resp->c.size = 32;
 	bn_write_be(&c[0], resp->c.bytes);
 
 	// compute s[0] = u - x_pi * c_pi ... everything modulo prime
@@ -858,16 +870,16 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// set resp -> s[]
 	resp->s_count = msg->n;
-	resp->s[0].size=32;
+	resp->s[0].size = 32;
 	bn_write_be(&s[0], resp->s[0].bytes);
 
 	// compute Yt
 	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
 	// copy x coordinate of Yt
-	resp->YtDotX.size=32;
+	resp->YtDotX.size = 32;
 	bn_write_be(&Yt.x, resp->YtDotX.bytes);
 	// copy y coordinate of Yt
-	resp->YtDotY.size=32;
+	resp->YtDotY.size = 32;
 	bn_write_be(&Yt.y, resp->YtDotY.bytes);
 
 	msg_write(MessageType_MessageType_MessageRingSignature, resp);

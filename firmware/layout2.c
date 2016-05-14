@@ -281,6 +281,18 @@ void layoutPublicKey(const uint8_t *pubkey)
 		desc, str[0], str[1], str[2], str[3], NULL);
 }
 
+void layoutBigNum(bignum256 num, const char *text)
+{
+	char hex[32*2+1], desc[16];
+	strlcpy(desc, text, sizeof(desc));
+	uint8_t numbytes[32];
+	bn_write_be(&num, numbytes);
+	data2hex(numbytes, 32, hex);
+	const char **str = split_message((const uint8_t *)hex, 32*2, 16);
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, NULL, "Continue", NULL,
+		desc, str[0], str[1], str[2], str[3], NULL);
+}
+
 void layoutNumber(uint32_t num, const char *text)
 {
 	char desc[16], hex[16];
