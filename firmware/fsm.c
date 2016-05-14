@@ -797,7 +797,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bn_read_be(hash, &h);
 
 	// print h
-	layoutBigNum(h, "h : ");
+	layoutBigNum(hash, "h : ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -813,7 +813,9 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	generate_k_random(&secp256k1, &u);
 
 	// print u
-	layoutBigNum(u, "u : ");
+	uint8_t ubytes[32];
+	bn_write_be(u, ubytes);
+	layoutBigNum(ubytes, "u : ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -841,7 +843,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bn_read_be(mhash, &m);
 
 	// print m
-	layoutBigNum(m, "m : ");
+	layoutBigNum(mhash, "m : ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
