@@ -752,7 +752,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// this is for debugging
 
 	// print n
-	layoutNumber(msg->n, "n:");
+	layoutNumber(msg->n, "n:              ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -761,7 +761,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	}
 
 	// print pi
-	layoutNumber(msg->pi, "pi:");
+	layoutNumber(msg->pi, "pi:             ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -797,7 +797,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bn_read_be(hash, &h);
 
 	// print h
-	layoutBigNum(hash, "h : ");
+	layoutBigNum(hash, "h :             ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -815,7 +815,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// print u
 	uint8_t ubytes[32];
 	bn_write_be(&u, ubytes);
-	layoutBigNum(ubytes, "u : ");
+	layoutBigNum(ubytes, "u :             ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -843,7 +843,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bn_read_be(mhash, &m);
 
 	// print m
-	layoutBigNum(mhash, "m : ");
+	layoutBigNum(mhash, "m :             ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
