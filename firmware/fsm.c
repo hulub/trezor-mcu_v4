@@ -783,16 +783,26 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// implementation of the LSAG generation algorithm
 	bignum256 c[msg->n];
 	bignum256 s[msg->n];
-	curve_point H, MathG, MathH, MathT, Result, Yt;
-//	uint32_t index;
+	curve_point H, Yt, Yi, MathG, MathG1, MathG2, MathH, MathH1, MathH2, MathT,
+			Result;
+	uint32_t index;
+
+	// turn message into a bignum
+	bignum256 m;
+	uint8_t mhash[32];
+	// hash the message to turn it into 32 byte array
+	sha256_Raw(msg->message.bytes, msg->message.size, mhash);
+	bn_read_be(mhash, &m);
 
 	// compute h = new bignum out of concatenation of all public keys
 	bignum256 h;
 	uint8_t hash[32];
+	// concatenate all public keys
 	uint8_t ytotal[65 * msg->n];
 	uint8_t i;
 	for (i = 0; i < msg->n; i++)
 		memcpy(ytotal + (i * 65), msg->L[i].bytes, 65);
+	// h = hash(L)
 	sha256_Raw(ytotal, 65 * msg->n, hash); // I do the hashing only once now ... this should be enough
 	bn_read_be(hash, &h);
 
@@ -830,6 +840,13 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		return;
 	}
 
+	// turn private key into a bignum
+	bignum256 privateKeyBigNum;
+	bn_read_be(node->private_key, &privateKeyBigNum);
+
+	// compute Yt
+	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
+
 	// randomly pick u
 	bignum256 u;
 	generate_k_random(&secp256k1, &u);
@@ -857,12 +874,27 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// add MathH to MathT
 	point_add(&secp256k1, &MathH, &MathT);
 
-	// turn message into a bignum
-	bignum256 m;
-	uint8_t mhash[32];
-	// hash the message to turn it into 32 byte array
-	sha256_Raw(msg->message.bytes, msg->message.size, mhash);
-	bn_read_be(mhash, &m);
+	// print MathT.x
+	uint8_t mathtxbytes[32];
+	bn_write_be(&MathT.x, mathtxbytes);
+	layoutBigNum(mathtxbytes, "Matht.x :       ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	// print MathT.y
+	uint8_t mathtybytes[32];
+	bn_write_be(&MathT.y, mathtybytes);
+	layoutBigNum(mathtybytes, "MathT.y :       ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 
 	// print m
 	layoutBigNum(mhash, "m :             ");
@@ -876,18 +908,101 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// compute Result = MathT * m
 	point_multiply(&secp256k1, &m, &MathT, &Result);
 
-	// c[0] = Result.y
-	c[0] = Result.y;
+	// c[pi+1] = Result.y
+	index = (msg->pi + 1) % msg->n;
+	c[index] = Result.y;
+
+	// for loop
+	for (i = msg->pi + 1; i < msg->n; i++) {
+		// randomly pick s[i]
+		generate_k_random(&secp256k1, &s[i]);
+		index = (i + 1) % msg->n;
+
+		// compute MathG = G*si + Yi*ci
+		// compute MathG1 = G*si
+		scalar_multiply(&secp256k1, &s[i], &MathG1);
+		// compute MAthG2 = Yi*ci
+		// generate Yi out of yi
+		ecdsa_read_pubkey(&secp256k1, msg->L[i].bytes, &Yi);
+		point_multiply(&secp256k1, &c[i], &Yi, &MathG2);
+		// copy MathG1 into MathG
+		point_copy(&MathG1, &MathG);
+		// add MathG2 to MathG
+		point_add(&secp256k1, &MathG2, &MathG);
+
+		// compute MathH = H*si + Yt*ci
+		// compute MathH1 = H*si
+		scalar_multiply(&secp256k1, &s[i], &MathH1);
+		// compute MAthH2 = Yt*ci
+		point_multiply(&secp256k1, &c[i], &Yt, &MathH2);
+		// copy MathH1 into MathH
+		point_copy(&MathH1, &MathH);
+		// add MathH2 to MathH
+		point_add(&secp256k1, &MathH2, &MathH);
+
+		// compute MathT = MathG + MathH
+		// copy MathG into MathT
+		point_copy(&MathG, &MathT);
+		// add MathH to MathT
+		point_add(&secp256k1, &MathH, &MathT);
+
+		// compute Result = MathT * m
+		point_multiply(&secp256k1, &m, &MathT, &Result);
+
+		// c[i+1] = Result.y
+		index = (i + 1) % msg->n;
+		c[index] = Result.y;
+	}
+
+	// for loop - from 0 to pi
+	for (i = 0; i < msg->pi; i++) {
+		// randomly pick s[i]
+		generate_k_random(&secp256k1, &s[i]);
+		index = (i + 1) % msg->n;
+
+		// compute MathG = G*si + Yi*ci
+		// compute MathG1 = G*si
+		scalar_multiply(&secp256k1, &s[i], &MathG1);
+		// compute MAthG2 = Yi*ci
+		// generate Yi out of yi
+		ecdsa_read_pubkey(&secp256k1, msg->L[i].bytes, &Yi);
+		point_multiply(&secp256k1, &c[i], &Yi, &MathG2);
+		// copy MathG1 into MathG
+		point_copy(&MathG1, &MathG);
+		// add MathG2 to MathG
+		point_add(&secp256k1, &MathG2, &MathG);
+
+		// compute MathH = H*si + Yt*ci
+		// compute MathH1 = H*si
+		scalar_multiply(&secp256k1, &s[i], &MathH1);
+		// compute MAthH2 = Yt*ci
+		point_multiply(&secp256k1, &c[i], &Yt, &MathH2);
+		// copy MathH1 into MathH
+		point_copy(&MathH1, &MathH);
+		// add MathH2 to MathH
+		point_add(&secp256k1, &MathH2, &MathH);
+
+		// compute MathT = MathG + MathH
+		// copy MathG into MathT
+		point_copy(&MathG, &MathT);
+		// add MathH to MathT
+		point_add(&secp256k1, &MathH, &MathT);
+
+		// compute Result = MathT * m
+		point_multiply(&secp256k1, &m, &MathT, &Result);
+
+		// c[i+1] = Result.y
+		index = (i + 1) % msg->n;
+		c[index] = Result.y;
+	}
+
+	// compute s[pi] = u - x_pi * c_pi ... everything modulo prime
+	bignum256 temp = c[msg->pi];
+	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.prime);
+	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.prime);
+
 	resp->c.size = 32;
 	bn_write_be(&c[0], resp->c.bytes);
-
-	// compute s[0] = u - x_pi * c_pi ... everything modulo prime
-	bignum256 temp = c[0];
-	// turn private key into a bignum
-	bignum256 privateKeyBigNum;
-	bn_read_be(node->private_key, &privateKeyBigNum);
-	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.prime);
-	bn_subtractmod(&u, &temp, &s[0], &secp256k1.prime);
 
 	// print private key
 	layoutBigNum(node->public_key, "private key :   ");
@@ -903,11 +1018,12 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// set resp -> s[]
 	resp->s_count = msg->n;
-	resp->s[0].size = 32;
-	bn_write_be(&s[0], resp->s[0].bytes);
+	for (i = 0; i < msg->n; i++) {
+		resp->s[i].size = 32;
+		bn_write_be(&s[i], resp->s[i].bytes);
+	}
 
-	// compute Yt
-	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
+	// set rest->Yt
 	// copy x coordinate of Yt
 	resp->YtDotX.size = 32;
 	bn_write_be(&Yt.x, resp->YtDotX.bytes);
