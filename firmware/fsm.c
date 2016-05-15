@@ -732,6 +732,49 @@ void fsm_msgSignMessage(SignMessage *msg) {
  * ... for now it just sends back a MessageSignature that does not have an address
  * ... the returned message has just the encrypted message
  *  */
+const void printPoint(const curve_point *point, const char *name, uint32_t length) {
+
+	uint8_t bytes[32];
+	bn_write_be(point->x, bytes);
+
+	char text[length + 2];
+	memcpy(text, name, length);
+	text[length] = '.';
+	text[length + 1] = 'x';
+
+	layoutBigNum(bytes, text);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	bn_write_be(point->y, bytes);
+	memcpy(text, name, length);
+	text[length] = '.';
+	text[length + 1] = 'y';
+	layoutBigNum(bytes, text);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+}
+
+const void printBigNum(const bignum256 *num, char *name) {
+
+	uint8_t bytes[32];
+	bn_write_be(num, bytes);
+	layoutBigNum(bytes, name);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+}
 
 void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	if (!storage_isInitialized()) {
@@ -1023,6 +1066,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		generate_k_random(&secp256k1, &s[i]);
 		index = (i + 1) % msg->n;
 
+
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
 		scalar_multiply(&secp256k1, &s[i], &MathG1);
@@ -1110,50 +1154,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	msg_write(MessageType_MessageType_MessageRingSignature, resp);
 	layoutHome();
-}
-
-const void printPoint(const curve_point *point, const char *name, uint32_t length) {
-
-	uint8_t bytes[32];
-	bn_write_be(point->x, bytes);
-
-	char text[length + 2];
-	memcpy(text, name, length);
-	text[length] = '.';
-	text[length + 1] = 'x';
-
-	layoutBigNum(bytes, text);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-	bn_write_be(point->y, bytes);
-	memcpy(text, name, length);
-	text[length] = '.';
-	text[length + 1] = 'y';
-	layoutBigNum(bytes, text);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-}
-
-const void printBigNum(const bignum256 *num, char *name) {
-
-	uint8_t bytes[32];
-	bn_write_be(num, bytes);
-	layoutBigNum(bytes, name);
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
 }
 
 /* Get Public Key 65 */
