@@ -732,10 +732,10 @@ void fsm_msgSignMessage(SignMessage *msg) {
  * ... for now it just sends back a MessageSignature that does not have an address
  * ... the returned message has just the encrypted message
  *  */
-const void printPoint(const curve_point *point, const char *name, uint32_t length) {
+const uint32_t printPoint(curve_point *point, const char *name, uint32_t length) {
 
 	uint8_t bytes[32];
-	bn_write_be(point->x, bytes);
+	bn_write_be(&point->x, bytes);
 
 	char text[length + 2];
 	memcpy(text, name, length);
@@ -747,10 +747,10 @@ const void printPoint(const curve_point *point, const char *name, uint32_t lengt
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
 		layoutHome();
-		return;
+		return 0;
 	}
 
-	bn_write_be(point->y, bytes);
+	bn_write_be(&point->y, bytes);
 	memcpy(text, name, length);
 	text[length] = '.';
 	text[length + 1] = 'y';
@@ -759,11 +759,13 @@ const void printPoint(const curve_point *point, const char *name, uint32_t lengt
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
 		layoutHome();
-		return;
+		return 0;
 	}
+
+	return 1;
 }
 
-const void printBigNum(const bignum256 *num, char *name) {
+const uint32_t printBigNum(bignum256 *num, char *name) {
 
 	uint8_t bytes[32];
 	bn_write_be(num, bytes);
@@ -772,8 +774,9 @@ const void printBigNum(const bignum256 *num, char *name) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
 		layoutHome();
-		return;
+		return 0;
 	}
+	return 1;
 }
 
 void fsm_msgRingSignMessage(RingSignMessage *msg) {
