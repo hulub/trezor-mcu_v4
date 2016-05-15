@@ -806,46 +806,43 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	sha256_Raw(ytotal, 65 * msg->n, hash); // I do the hashing only once now ... this should be enough
 	bn_read_be(hash, &h);
 
-	// print h
-	layoutBigNum(hash, "h :             ");
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
+	printBigNum(&h, "h");
 
 	// compute H
 	scalar_multiply(&secp256k1, &h, &H);
 
-	// print H.x
-	uint8_t hxbytes[32];
-	bn_write_be(&H.x, hxbytes);
-	layoutBigNum(hxbytes, "H.x :           ");
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-	// print H.y
-	uint8_t hybytes[32];
-	bn_write_be(&H.y, hybytes);
-	layoutBigNum(hybytes, "H.y :           ");
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
+	printPoint(&H, "H", 1);
 
 	// turn private key into a bignum
 	bignum256 privateKeyBigNum;
 	bn_read_be(node->private_key, &privateKeyBigNum);
 
+	printBigNum(&privateKeyBigNum, "priv key big num");
+
 	// compute Yt
 	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
+
+	// print Yt.x
+	uint8_t ytxbytes[32];
+	bn_write_be(&Yt.x, ytxbytes);
+	layoutBigNum(ytxbytes, "Yt.x :          ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	// print Yt.y
+	uint8_t ytybytes[32];
+	bn_write_be(&Yt.y, ytybytes);
+	layoutBigNum(ytybytes, "Yt.y :          ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 
 	// randomly pick u
 	bignum256 u;
@@ -865,8 +862,52 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// compute MathG = G * u
 	scalar_multiply(&secp256k1, &u, &MathG);
 
+	// print MathG.x
+	uint8_t mathgxbytes[32];
+	bn_write_be(&MathG.x, mathgxbytes);
+	layoutBigNum(mathgxbytes, "MathG.x :       ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	// print MathG.y
+	uint8_t mathgybytes[32];
+	bn_write_be(&MathG.y, mathgybytes);
+	layoutBigNum(mathgybytes, "MathG.y :       ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
 	// compute MathH = H * u
 	point_multiply(&secp256k1, &u, &H, &MathH);
+
+	// print MathH.x
+	uint8_t mathhxbytes[32];
+	bn_write_be(&MathH.x, mathhxbytes);
+	layoutBigNum(mathhxbytes, "MathH.x :       ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	// print MathH.y
+	uint8_t mathhybytes[32];
+	bn_write_be(&MathH.y, mathhybytes);
+	layoutBigNum(mathhybytes, "MathH.y :       ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 
 	// compute MathT = MathG + MathH
 	// copy MathG into MathT
@@ -877,7 +918,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// print MathT.x
 	uint8_t mathtxbytes[32];
 	bn_write_be(&MathT.x, mathtxbytes);
-	layoutBigNum(mathtxbytes, "Matht.x :       ");
+	layoutBigNum(mathtxbytes, "MathT.x :       ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
@@ -907,6 +948,28 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// compute Result = MathT * m
 	point_multiply(&secp256k1, &m, &MathT, &Result);
+
+	// print Result.x
+	uint8_t resultxbytes[32];
+	bn_write_be(&Result.x, resultxbytes);
+	layoutBigNum(resultxbytes, "Result.x :      ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	// print Result.y
+	uint8_t resultybytes[32];
+	bn_write_be(&Result.y, resultybytes);
+	layoutBigNum(resultybytes, "Result.y :      ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 
 	// c[pi+1] = Result.y
 	index = (msg->pi + 1) % msg->n;
@@ -999,19 +1062,33 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// compute s[pi] = u - x_pi * c_pi ... everything modulo prime
 	bignum256 temp = c[msg->pi];
 	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.prime);
-	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.prime);
 
-	resp->c.size = 32;
-	bn_write_be(&c[0], resp->c.bytes);
-
-	// print private key
-	layoutBigNum(node->public_key, "private key :   ");
+	// print x_pi*c_pi
+	uint8_t xpicpi[32];
+	bn_write_be(&temp, xpicpi);
+	layoutBigNum(xpicpi, "x_pi*c_pi :     ");
 	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled,
 				"Show public key cancelled");
 		layoutHome();
 		return;
 	}
+
+	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.prime);
+
+	// print s_pi
+	uint8_t spi[32];
+	bn_write_be(&s[msg->pi], spi);
+	layoutBigNum(spi, "s_pi :          ");
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	resp->c.size = 32;
+	bn_write_be(&c[0], resp->c.bytes);
 
 	// set resp->n
 	resp->n = msg->n;
@@ -1033,6 +1110,50 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	msg_write(MessageType_MessageType_MessageRingSignature, resp);
 	layoutHome();
+}
+
+void printPoint(curve_point *point, char *name, uint32_t length) {
+
+	uint8_t bytes[32];
+	bn_write_be(point.x, bytes);
+
+	char text[length + 2];
+	memcpy(text, name, length);
+	text[length] = '.';
+	text[length + 1] = 'x';
+
+	layoutBigNum(bytes, text);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+
+	bn_write_be(&point.y, bytes);
+	memcpy(text, name, length);
+	text[length] = '.';
+	text[length + 1] = 'y';
+	layoutBigNum(bytes, text);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
+}
+
+void printBigNum(bignum256 *num, char *name) {
+
+	uint8_t bytes[32];
+	bn_write_be(num, bytes);
+	layoutBigNum(bytes, name);
+	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Show public key cancelled");
+		layoutHome();
+		return;
+	}
 }
 
 /* Get Public Key 65 */
