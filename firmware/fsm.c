@@ -1112,7 +1112,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	layoutHome();
 }
 
-void printPoint(const curve_point *point, const char *name, uint32_t length) {
+const void printPoint(const curve_point *point, const char *name, uint32_t length) {
 
 	uint8_t bytes[32];
 	bn_write_be(point->x, bytes);
@@ -1143,7 +1143,7 @@ void printPoint(const curve_point *point, const char *name, uint32_t length) {
 	}
 }
 
-void printBigNum(const bignum256 *num, char *name) {
+const void printBigNum(const bignum256 *num, char *name) {
 
 	uint8_t bytes[32];
 	bn_write_be(num, bytes);
