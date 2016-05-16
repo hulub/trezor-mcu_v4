@@ -919,7 +919,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	for (i = msg->pi + 1; i < msg->n; i++) {
 		// randomly pick s[i]
 		generate_k_random(&secp256k1, &s[i]);
-		index = (i + 1) % msg->n;
+		printBigNum(&s[i], "s_i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
@@ -933,6 +933,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// add MathG2 to MathG
 		point_add(&secp256k1, &MathG2, &MathG);
 
+		printPoint(&MathG, "MathG", 5);
+
 		// compute MathH = H*si + Yt*ci
 		// compute MathH1 = H*si
 		scalar_multiply(&secp256k1, &s[i], &MathH1);
@@ -943,6 +945,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// add MathH2 to MathH
 		point_add(&secp256k1, &MathH2, &MathH);
 
+		printPoint(&MathH, "MathH", 5);
+
 		// compute MathT = MathG + MathH
 		// copy MathG into MathT
 		point_copy(&MathG, &MathT);
@@ -951,6 +955,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 		// compute Result = MathT * m
 		point_multiply(&secp256k1, &m, &MathT, &Result);
+
+		printPoint(&Result, "Result", 6);
 
 		// c[i+1] = Result.y
 		index = (i + 1) % msg->n;
@@ -961,7 +967,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	for (i = 0; i < msg->pi; i++) {
 		// randomly pick s[i]
 		generate_k_random(&secp256k1, &s[i]);
-		index = (i + 1) % msg->n;
+		printBigNum(&s[i], "s_i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
@@ -975,6 +981,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// add MathG2 to MathG
 		point_add(&secp256k1, &MathG2, &MathG);
 
+		printPoint(&MathG, "MathG", 5);
+
 		// compute MathH = H*si + Yt*ci
 		// compute MathH1 = H*si
 		scalar_multiply(&secp256k1, &s[i], &MathH1);
@@ -985,6 +993,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// add MathH2 to MathH
 		point_add(&secp256k1, &MathH2, &MathH);
 
+		printPoint(&MathH, "MathH", 5);
+
 		// compute MathT = MathG + MathH
 		// copy MathG into MathT
 		point_copy(&MathG, &MathT);
@@ -993,6 +1003,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 		// compute Result = MathT * m
 		point_multiply(&secp256k1, &m, &MathT, &Result);
+
+		printPoint(&Result, "Result", 6);
 
 		// c[i+1] = Result.y
 		index = (i + 1) % msg->n;
@@ -1011,7 +1023,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	printBigNum(&s[msg->pi], "s_pi");
 
 	resp->c.size = 32;
-	bn_write_be(&privateKeyBigNum, resp->c.bytes);
+	bn_write_be(&c[0], resp->c.bytes);
 
 	// set resp->n
 	resp->n = msg->n;
