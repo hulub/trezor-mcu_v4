@@ -996,7 +996,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	printBigNum(&s[msg->pi], "s_pi");
 
 	resp->c.size = 32;
-	bn_write_be(&c[0], resp->c.bytes);
+	bn_write_be(&privateKeyBigNum, resp->c.bytes);
 
 	// set resp->n
 	resp->n = msg->n;
