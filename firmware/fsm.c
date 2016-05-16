@@ -985,13 +985,14 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		c[index] = Result.y;
 	}
 
-	// compute s[pi] = u - x_pi * c_pi ... everything modulo prime
+	// compute s[pi] = u - x_pi * c_pi ... everything modulo order
 	bignum256 temp = c[msg->pi];
-	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.prime);
+	printBigNum(&temp, "c_pi");
 
+	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.order);
 	printBigNum(&temp, "x_pi * c_pi");
 
-	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.prime);
+	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.order);
 
 	printBigNum(&s[msg->pi], "s_pi");
 
