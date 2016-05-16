@@ -1022,10 +1022,12 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bignum256 temp = c[msg->pi];
 	printBigNum(&temp, "c_pi");
 
-	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.order_half);
+	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.order); // temp is partly reduced
 	printBigNum(&temp, "x_pi * c_pi");
 
-	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.order_half);
+	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.order); // s[pi] normalized
+	bn_fast_mod(&s[msg->pi], &secp256k1.order); // s[pi] partly reduced
+	bn_mod(&s[msg->pi], &secp256k1.order); // s[pi] reduced
 
 	printBigNum(&s[msg->pi], "s_pi");
 
