@@ -821,9 +821,20 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	layoutProgressSwipe("Ring Signing...", 0);
 
-	printPoint(&secp256k1.G, "G", 1);
-	printBigNum(&secp256k1.order, "order");
-	printBigNum(&secp256k1.prime, "prime");
+	curve_point G;
+	point_copy(&secp256k1.G, &G);
+	printPoint(&G, "G", 1);
+
+	uint8_t parambytes[32];
+	bn_write_be(&secp256k1.order, parambytes);
+	bignum256 order;
+	bn_read_be(parambytes, &order);
+	printBigNum(&order, "order");
+
+	bn_write_be(&secp256k1.prime, parambytes);
+	bignum256 prime;
+	bn_read_be(parambytes, &prime);
+	printBigNum(&prime, "prime");
 
 	// implementation of the LSAG generation algorithm
 	bignum256 c[msg->n];
@@ -951,7 +962,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// randomly pick s[i]
 		generate_k_random(&secp256k1, &s[i]);
 		index = (i + 1) % msg->n;
-
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
