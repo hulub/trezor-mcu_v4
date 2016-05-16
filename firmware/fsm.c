@@ -831,7 +831,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bn_read_be(parambytes, &order);
 	printBigNum(&order, "order");
 
-	uint8_t parambytes[32];
 	bn_write_be(&secp256k1.order_half, parambytes);
 	bignum256 order_half;
 	bn_read_be(parambytes, &order_half);
