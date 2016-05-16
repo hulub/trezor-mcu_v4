@@ -831,6 +831,12 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bn_read_be(parambytes, &order);
 	printBigNum(&order, "order");
 
+	uint8_t parambytes[32];
+	bn_write_be(&secp256k1.order_half, parambytes);
+	bignum256 order_half;
+	bn_read_be(parambytes, &order_half);
+	printBigNum(&order_half, "half order");
+
 	bn_write_be(&secp256k1.prime, parambytes);
 	bignum256 prime;
 	bn_read_be(parambytes, &prime);
@@ -880,9 +886,10 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	printPoint(&Yt, "Yt", 2);
 
-	// randomly pick u
+	// randomly pick u 0 < u < order_half
 	bignum256 u;
 	generate_k_random(&secp256k1, &u);
+	bn_mod(&u, &secp256k1.order_half);
 
 	printBigNum(&u, "u");
 
@@ -919,6 +926,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	for (i = msg->pi + 1; i < msg->n; i++) {
 		// randomly pick s[i]
 		generate_k_random(&secp256k1, &s[i]);
+		bn_mod(&s[i], &secp256k1.order_half);
 		printBigNum(&s[i], "s_i");
 
 		// compute MathG = G*si + Yi*ci
