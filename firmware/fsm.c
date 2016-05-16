@@ -821,9 +821,9 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	layoutProgressSwipe("Ring Signing...", 0);
 
-	printPoint(&secp256k1->G, "G", 1);
-	printBigNum(&secp256k1->order, "order");
-	printBigNum(&secp256k1->prime, "prime");
+	printPoint(&secp256k1.G, "G", 1);
+	printBigNum(&secp256k1.order, "order");
+	printBigNum(&secp256k1.prime, "prime");
 
 	// implementation of the LSAG generation algorithm
 	bignum256 c[msg->n];
