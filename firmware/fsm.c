@@ -1038,6 +1038,20 @@ void fsm_msgGetPublicKey65(GetPublicKey65 *msg) {
 
 	RESP_INIT(PublicKey65);
 
+	bignum256 privkey;
+	bn_read_be(node->private_key, &privkey);
+	printBigNum(&privkey, "priv key");
+
+	curve_point publickey_calculated;
+	scalar_multiply(&secp256k1, &privkey, &publickey_calculated);
+	printPoint(&publickey_calculated, "Pub calculated", 14);
+
+	uint8_t bytes[65];
+	curve_point publickey_generated;
+	ecdsa_get_public_key65(&secp256k1, node->private_key, bytes);
+	ecdsa_read_pubkey(&secp256k1, bytes, &publickey_generated);
+	printPoint(&publickey_generated, "Pub generated", 13);
+
 	resp->publicKey.size = 65;
 	ecdsa_get_public_key65(&secp256k1, node->private_key,
 			resp->publicKey.bytes);
