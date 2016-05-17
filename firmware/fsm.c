@@ -884,7 +884,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// c[pi+1] = Result.y
 	index = (msg->pi + 1) % msg->n;
 	c[index] = Result.y; // assume that the coordinates are fully reduced numbers
-	layoutNumber(index, "index");
 	printBigNum(&c[index], "c[pi+1]");
 
 	// for loop
@@ -893,7 +892,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		generate_k_random(&secp256k1, &s[i]); // it doesn't have to be s[i] < order half
 //		bn_mod(&s[i], &secp256k1.order_half); // fully reduced is enough
 		printBigNum(&s[i], "1st loop s_i");
-		layoutNumber(i, "i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
@@ -942,7 +940,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// c[i+1] = Result.y
 		index = (i + 1) % msg->n;
 		c[index] = Result.y; // it is assumed the coordinate to be fully reduced number
-		layoutNumber(index, "index");
 		printBigNum(&c[index], "c[index]");
 	}
 
@@ -968,7 +965,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 		// compute MathH = H*si + Yt*ci
 		// compute MathH1 = H*si
-		scalar_multiply(&secp256k1, &s[i], &MathH1);
+		point_multiply(&secp256k1, &s[i], &H, &MathH1);
 		// compute MAthH2 = Yt*ci
 		point_multiply(&secp256k1, &c[i], &Yt, &MathH2);
 		// copy MathH1 into MathH
@@ -999,7 +996,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	printBigNum(&temp, "c_pi");
 
 	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.order); // temp is partly reduced
-	printBigNum(&temp, "x_pi * c_pi");
 
 	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.order); // s[pi] normalized
 	bn_fast_mod(&s[msg->pi], &secp256k1.order); // s[pi] partly reduced
