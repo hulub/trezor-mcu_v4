@@ -830,20 +830,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	sha256_Raw(ytotal, 65 * msg->n, hash); // I do the hashing only once now ... this should be enough
 
 	bn_read_be(hash, &h); // h - partly reduced
-	printBigNum(&h, "h partly red");
-
 	bn_mod(&h, &secp256k1.order); // h fully reduced
 	printBigNum(&h, "h fully red");
-
-	// copy h into h_2
-	uint8_t hbytes[32];
-	bn_write_be(&h, hbytes);
-	bignum256 h_2;
-	bn_read_be(hbytes, &h_2); // h2 - partly reduced in context of order half
-	printBigNum(&h_2, "h2 partly red");
-
-	bn_mod(&h_2, &secp256k1.order_half); // h2 fully reduced in context of order half
-	printBigNum(&h_2, "h2 fully red");
 
 	// compute H
 	scalar_multiply(&secp256k1, &h, &H);
@@ -927,7 +915,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 		// compute MathH = H*si + Yt*ci
 		// compute MathH1 = H*si
-		scalar_multiply(&secp256k1, &s[i], &MathH1);
+		point_multiply(&secp256k1, &s[i], &H, &MathH1); // now I compute the right MathH1
 		printPoint(&MathH1, "MathH1", 6);
 		// compute MAthH2 = Yt*ci
 		point_multiply(&secp256k1, &c[i], &Yt, &MathH2);
