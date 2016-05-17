@@ -792,24 +792,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// this is for debugging
 
-	// print n
-	layoutNumber(msg->n, "n:              ");
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
-	// print pi
-	layoutNumber(msg->pi, "pi:             ");
-	if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Show public key cancelled");
-		layoutHome();
-		return;
-	}
-
 	// print message
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -820,26 +802,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	}
 
 	layoutProgressSwipe("Ring Signing...", 0);
-
-	curve_point G;
-	point_copy(&secp256k1.G, &G);
-	printPoint(&G, "G", 1);
-
-	uint8_t parambytes[32];
-	bn_write_be(&secp256k1.order, parambytes);
-	bignum256 order;
-	bn_read_be(parambytes, &order);
-	printBigNum(&order, "order");
-
-	bn_write_be(&secp256k1.order_half, parambytes);
-	bignum256 order_half;
-	bn_read_be(parambytes, &order_half);
-	printBigNum(&order_half, "half order");
-
-	bn_write_be(&secp256k1.prime, parambytes);
-	bignum256 prime;
-	bn_read_be(parambytes, &prime);
-	printBigNum(&prime, "prime");
 
 	// implementation of the LSAG generation algorithm
 	bignum256 c[msg->n];
@@ -853,7 +815,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	uint8_t mhash[32];
 	// hash the message to turn it into 32 byte array
 	sha256_Raw(msg->message.bytes, msg->message.size, mhash);
-	bn_read_be(mhash, &m);
+	bn_read_be(mhash, &m); // m is partly reduced
+	bn_mod(&m, &secp256k1.order); // m is fully reduced
 
 	// compute h = new bignum out of concatenation of all public keys
 	bignum256 h;
@@ -865,7 +828,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		memcpy(ytotal + (i * 65), msg->L[i].bytes, 65);
 	// h = hash(L)
 	sha256_Raw(ytotal, 65 * msg->n, hash); // I do the hashing only once now ... this should be enough
-	bn_read_be(hash, &h);
+	bn_read_be(hash, &h); // h - partly reduced
+	bn_mod(&h, &secp256k1.order); // h fully reduced
 
 	printBigNum(&h, "h");
 
@@ -876,9 +840,10 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// turn private key into a bignum
 	bignum256 privateKeyBigNum;
-	bn_read_be(node->private_key, &privateKeyBigNum);
+	bn_read_be(node->private_key, &privateKeyBigNum); // privateKeyBigNum is partly reduced
+	// this might need to be fully reduced ... maybe this is why it kind of crashed to compute Yt in Java
 
-	printBigNum(&privateKeyBigNum, "priv key big num");
+	printBigNum(&privateKeyBigNum, "priv key");
 
 	// compute Yt
 	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
@@ -887,8 +852,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// randomly pick u 0 < u < order_half
 	bignum256 u;
-	generate_k_random(&secp256k1, &u);
-	bn_mod(&u, &secp256k1.order_half);
+	generate_k_random(&secp256k1, &u); // u fully reduced
+//	bn_mod(&u, &secp256k1.order_half); // try with u < order
 
 	printBigNum(&u, "u");
 
@@ -910,7 +875,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	printPoint(&MathT, "MathT", 5);
 
-	printBigNum(&m, "m");
+	printBigNum(&m, "m"); // m is fully reduced
 
 	// compute Result = MathT * m
 	point_multiply(&secp256k1, &m, &MathT, &Result);
@@ -919,14 +884,14 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// c[pi+1] = Result.y
 	index = (msg->pi + 1) % msg->n;
-	c[index] = Result.y;
+	c[index] = Result.y; // assume that the coordinates are fully reduced numbers
 
 	// for loop
 	for (i = msg->pi + 1; i < msg->n; i++) {
 		// randomly pick s[i]
-		generate_k_random(&secp256k1, &s[i]);
-		bn_mod(&s[i], &secp256k1.order_half);
-		printBigNum(&s[i], "s_i");
+		generate_k_random(&secp256k1, &s[i]); // it doesn't have to be s[i] < order half
+//		bn_mod(&s[i], &secp256k1.order_half); // fully reduced is enough
+		printBigNum(&s[i], "1st loop s_i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
@@ -934,7 +899,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// compute MAthG2 = Yi*ci
 		// generate Yi out of yi
 		ecdsa_read_pubkey(&secp256k1, msg->L[i].bytes, &Yi);
-		point_multiply(&secp256k1, &c[i], &Yi, &MathG2);
+		point_multiply(&secp256k1, &c[i], &Yi, &MathG2); // c[i] is assumed to be fully reduced
 		// copy MathG1 into MathG
 		point_copy(&MathG1, &MathG);
 		// add MathG2 to MathG
@@ -967,14 +932,14 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 		// c[i+1] = Result.y
 		index = (i + 1) % msg->n;
-		c[index] = Result.y;
+		c[index] = Result.y; // it is assumed the coordinate to be fully reduced number
 	}
 
 	// for loop - from 0 to pi
 	for (i = 0; i < msg->pi; i++) {
 		// randomly pick s[i]
-		generate_k_random(&secp256k1, &s[i]);
-		printBigNum(&s[i], "s_i");
+		generate_k_random(&secp256k1, &s[i]); // s[i] is fully reduced
+		printBigNum(&s[i], "2nd loop s_i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
@@ -1019,7 +984,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	}
 
 	// compute s[pi] = u - x_pi * c_pi ... everything modulo order
-	bignum256 temp = c[msg->pi];
+	bignum256 temp = c[msg->pi]; // c is assumed to be fully reduced because it is a curve point coordinate
 	printBigNum(&temp, "c_pi");
 
 	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.order); // temp is partly reduced
@@ -1027,7 +992,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.order); // s[pi] normalized
 	bn_fast_mod(&s[msg->pi], &secp256k1.order); // s[pi] partly reduced
-	bn_mod(&s[msg->pi], &secp256k1.order); // s[pi] reduced
+	bn_mod(&s[msg->pi], &secp256k1.order); // s[pi] fully reduced
 
 	printBigNum(&s[msg->pi], "s_pi");
 
