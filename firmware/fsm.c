@@ -823,7 +823,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	uint8_t hash[32];
 	// concatenate all public keys
 	uint8_t ytotal[65 * msg->n];
-	uint8_t i;
+	uint32_t i;
 	for (i = 0; i < msg->n; i++)
 		memcpy(ytotal + (i * 65), msg->L[i].bytes, 65);
 	// h = hash(L)
@@ -835,6 +835,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	bn_mod(&h, &secp256k1.order); // h fully reduced
 	printBigNum(&h, "h fully red");
 
+	// copy h into h_2
 	uint8_t hbytes[32];
 	bn_write_be(&h, hbytes);
 	bignum256 h_2;
@@ -858,7 +859,6 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// compute Yt
 	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
-
 	printPoint(&Yt, "Yt", 2);
 
 	// randomly pick u 0 < u < order_half
@@ -896,6 +896,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// c[pi+1] = Result.y
 	index = (msg->pi + 1) % msg->n;
 	c[index] = Result.y; // assume that the coordinates are fully reduced numbers
+	layoutNumber(index, "index");
+	printBigNum(c[index], "c[pi+1]");
 
 	// for loop
 	for (i = msg->pi + 1; i < msg->n; i++) {
@@ -903,14 +905,19 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		generate_k_random(&secp256k1, &s[i]); // it doesn't have to be s[i] < order half
 //		bn_mod(&s[i], &secp256k1.order_half); // fully reduced is enough
 		printBigNum(&s[i], "1st loop s_i");
+		layoutNumber(i, "i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
 		scalar_multiply(&secp256k1, &s[i], &MathG1);
+		printPoint(&MathG1, "MathG1", 6);
 		// compute MAthG2 = Yi*ci
 		// generate Yi out of yi
 		ecdsa_read_pubkey(&secp256k1, msg->L[i].bytes, &Yi);
+		printPoint(&Yi, "Yi", 2);
+
 		point_multiply(&secp256k1, &c[i], &Yi, &MathG2); // c[i] is assumed to be fully reduced
+		printPoint(&MathG2, "MathG2", 6);
 		// copy MathG1 into MathG
 		point_copy(&MathG1, &MathG);
 		// add MathG2 to MathG
@@ -921,8 +928,10 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// compute MathH = H*si + Yt*ci
 		// compute MathH1 = H*si
 		scalar_multiply(&secp256k1, &s[i], &MathH1);
+		printPoint(&MathH1, "MathH1", 6);
 		// compute MAthH2 = Yt*ci
 		point_multiply(&secp256k1, &c[i], &Yt, &MathH2);
+		printPoint(&MathH2, "MathH2", 6);
 		// copy MathH1 into MathH
 		point_copy(&MathH1, &MathH);
 		// add MathH2 to MathH
@@ -935,6 +944,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		point_copy(&MathG, &MathT);
 		// add MathH to MathT
 		point_add(&secp256k1, &MathH, &MathT);
+		printPoint(&MathT, "MathT", 5);
 
 		// compute Result = MathT * m
 		point_multiply(&secp256k1, &m, &MathT, &Result);
@@ -944,6 +954,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// c[i+1] = Result.y
 		index = (i + 1) % msg->n;
 		c[index] = Result.y; // it is assumed the coordinate to be fully reduced number
+		layoutNumber(index, "index");
+		printBigNum(c[index], "c[index]");
 	}
 
 	// for loop - from 0 to pi
