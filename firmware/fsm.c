@@ -897,7 +897,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	index = (msg->pi + 1) % msg->n;
 	c[index] = Result.y; // assume that the coordinates are fully reduced numbers
 	layoutNumber(index, "index");
-	printBigNum(c[index], "c[pi+1]");
+	printBigNum(&c[index], "c[pi+1]");
 
 	// for loop
 	for (i = msg->pi + 1; i < msg->n; i++) {
@@ -955,7 +955,7 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		index = (i + 1) % msg->n;
 		c[index] = Result.y; // it is assumed the coordinate to be fully reduced number
 		layoutNumber(index, "index");
-		printBigNum(c[index], "c[index]");
+		printBigNum(&c[index], "c[index]");
 	}
 
 	// for loop - from 0 to pi
