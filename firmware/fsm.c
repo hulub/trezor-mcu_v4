@@ -829,9 +829,10 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// h = hash(L)
 	sha256_Raw(ytotal, 65 * msg->n, hash); // I do the hashing only once now ... this should be enough
 	bn_read_be(hash, &h); // h - partly reduced
-	bn_mod(&h, &secp256k1.order); // h fully reduced
+	printBigNum(&h, "h partly red");
 
-	printBigNum(&h, "h");
+	bn_mod(&h, &secp256k1.order); // h fully reduced
+	printBigNum(&h, "h fully red");
 
 	// compute H
 	scalar_multiply(&secp256k1, &h, &H);
