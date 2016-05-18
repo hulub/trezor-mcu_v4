@@ -781,15 +781,16 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		return;
 	}
 
-	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
-	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled,
-				"Ring sign message cancelled");
+	if (!protectPin(true)) {
 		layoutHome();
 		return;
 	}
 
-	if (!protectPin(true)) {
+	// print message
+	layoutEncryptMessage(msg->message.bytes, msg->message.size, false);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled,
+				"Ring sign message cancelled");
 		layoutHome();
 		return;
 	}
@@ -835,28 +836,40 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	bn_read_be(hash, &h); // h - partly reduced
 	bn_mod(&h, &secp256k1.order); // h fully reduced
+//	printBigNum(&h, "h fully red");
 
 	// compute H
 	scalar_multiply(&secp256k1, &h, &H);
+
+//	printPoint(&H, "H", 1);
 
 	// turn private key into a bignum
 	bignum256 privateKeyBigNum;
 	bn_read_be(node->private_key, &privateKeyBigNum); // privateKeyBigNum is partly reduced
 	// this might need to be fully reduced ... maybe this is why it kind of crashed to compute Yt in Java
 
+//	printBigNum(&privateKeyBigNum, "priv key");
+
 	// compute Yt
 	point_multiply(&secp256k1, &privateKeyBigNum, &H, &Yt);
+//	printPoint(&Yt, "Yt", 2);
 
 	// randomly pick u 0 < u < order_half
 	bignum256 u;
 	generate_k_random(&secp256k1, &u); // u fully reduced
 //	bn_mod(&u, &secp256k1.order_half); // try with u < order
 
+//	printBigNum(&u, "u");
+
 	// compute MathG = G * u
 	scalar_multiply(&secp256k1, &u, &MathG);
 
+//	printPoint(&MathG, "MathG", 5);
+
 	// compute MathH = H * u
 	point_multiply(&secp256k1, &u, &H, &MathH);
+
+//	printPoint(&MathH, "MathH", 5);
 
 	// compute MathT = MathG + MathH
 	// copy MathG into MathT
@@ -864,60 +877,82 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 	// add MathH to MathT
 	point_add(&secp256k1, &MathH, &MathT);
 
+//	printPoint(&MathT, "MathT", 5);
+
+//	printBigNum(&m, "m"); // m is fully reduced
+
 	// compute Result = MathT * m
 	point_multiply(&secp256k1, &m, &MathT, &Result);
+
+//	printPoint(&Result, "Result", 6);
 
 	// c[pi+1] = Result.y
 	index = (msg->pi + 1) % msg->n;
 	c[index] = Result.y; // assume that the coordinates are fully reduced numbers
+//	printBigNum(&c[index], "c[pi+1]");
 
 	// for loop
 	for (i = msg->pi + 1; i < msg->n; i++) {
 		// randomly pick s[i]
 		generate_k_random(&secp256k1, &s[i]); // it doesn't have to be s[i] < order half
 //		bn_mod(&s[i], &secp256k1.order_half); // fully reduced is enough
+//		printBigNum(&s[i], "1st loop s_i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
 		scalar_multiply(&secp256k1, &s[i], &MathG1);
+//		printPoint(&MathG1, "MathG1", 6);
 		// compute MAthG2 = Yi*ci
 		// generate Yi out of yi
 		ecdsa_read_pubkey(&secp256k1, msg->L[i].bytes, &Yi);
+//		printPoint(&Yi, "Yi", 2);
 
 		point_multiply(&secp256k1, &c[i], &Yi, &MathG2); // c[i] is assumed to be fully reduced
+//		printPoint(&MathG2, "MathG2", 6);
 		// copy MathG1 into MathG
 		point_copy(&MathG1, &MathG);
 		// add MathG2 to MathG
 		point_add(&secp256k1, &MathG2, &MathG);
 
+//		printPoint(&MathG, "MathG", 5);
+
 		// compute MathH = H*si + Yt*ci
 		// compute MathH1 = H*si
 		point_multiply(&secp256k1, &s[i], &H, &MathH1); // now I compute the right MathH1
+//		printPoint(&MathH1, "MathH1", 6);
 		// compute MAthH2 = Yt*ci
 		point_multiply(&secp256k1, &c[i], &Yt, &MathH2);
+//		printPoint(&MathH2, "MathH2", 6);
 		// copy MathH1 into MathH
 		point_copy(&MathH1, &MathH);
 		// add MathH2 to MathH
 		point_add(&secp256k1, &MathH2, &MathH);
+
+//		printPoint(&MathH, "MathH", 5);
 
 		// compute MathT = MathG + MathH
 		// copy MathG into MathT
 		point_copy(&MathG, &MathT);
 		// add MathH to MathT
 		point_add(&secp256k1, &MathH, &MathT);
+//		printPoint(&MathT, "MathT", 5);
 
 		// compute Result = MathT * m
 		point_multiply(&secp256k1, &m, &MathT, &Result);
 
+//		printPoint(&Result, "Result", 6);
+
 		// c[i+1] = Result.y
 		index = (i + 1) % msg->n;
 		c[index] = Result.y; // it is assumed the coordinate to be fully reduced number
+//		printBigNum(&c[index], "c[index]");
 	}
 
 	// for loop - from 0 to pi
 	for (i = 0; i < msg->pi; i++) {
 		// randomly pick s[i]
 		generate_k_random(&secp256k1, &s[i]); // s[i] is fully reduced
+//		printBigNum(&s[i], "2nd loop s_i");
 
 		// compute MathG = G*si + Yi*ci
 		// compute MathG1 = G*si
@@ -925,10 +960,13 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// compute MAthG2 = Yi*ci
 		// generate Yi out of yi
 		ecdsa_read_pubkey(&secp256k1, msg->L[i].bytes, &Yi);
+		point_multiply(&secp256k1, &c[i], &Yi, &MathG2);
 		// copy MathG1 into MathG
 		point_copy(&MathG1, &MathG);
 		// add MathG2 to MathG
 		point_add(&secp256k1, &MathG2, &MathG);
+
+//		printPoint(&MathG, "MathG", 5);
 
 		// compute MathH = H*si + Yt*ci
 		// compute MathH1 = H*si
@@ -940,6 +978,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// add MathH2 to MathH
 		point_add(&secp256k1, &MathH2, &MathH);
 
+//		printPoint(&MathH, "MathH", 5);
+
 		// compute MathT = MathG + MathH
 		// copy MathG into MathT
 		point_copy(&MathG, &MathT);
@@ -949,6 +989,8 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 		// compute Result = MathT * m
 		point_multiply(&secp256k1, &m, &MathT, &Result);
 
+//		printPoint(&Result, "Result", 6);
+
 		// c[i+1] = Result.y
 		index = (i + 1) % msg->n;
 		c[index] = Result.y;
@@ -956,12 +998,15 @@ void fsm_msgRingSignMessage(RingSignMessage *msg) {
 
 	// compute s[pi] = u - x_pi * c_pi ... everything modulo order
 	bignum256 temp = c[msg->pi]; // c is assumed to be fully reduced because it is a curve point coordinate
+//	printBigNum(&temp, "c_pi");
 
 	bn_multiply(&privateKeyBigNum, &temp, &secp256k1.order); // temp is partly reduced
 
 	bn_subtractmod(&u, &temp, &s[msg->pi], &secp256k1.order); // s[pi] normalized
 	bn_fast_mod(&s[msg->pi], &secp256k1.order); // s[pi] partly reduced
 	bn_mod(&s[msg->pi], &secp256k1.order); // s[pi] fully reduced
+
+//	printBigNum(&s[msg->pi], "s_pi");
 
 	resp->c.size = 32;
 	bn_write_be(&c[0], resp->c.bytes);
